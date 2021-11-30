@@ -76,16 +76,6 @@ public interface IDataStore
 }
 ```
 
-# Advantages of Decoupled and Centralized Domain 
-
- DoMo manages the model state in a single location (a data store) that is decoupled from the rest of the application. This provides many advantages: 
-
-* Views can bind directly to domain models
-* Changing the persistence mechanism is trivial
-* The same set of domain models can be reused in different applications 
-* Taking snap shots of the application state (e.g. time travel) is trivial
-* Improves testability 
-
 # Suggested Best Practices 
 
 The following are some suggested practices for usin  DoMo: 
@@ -100,12 +90,18 @@ The following are some suggested practices for usin  DoMo:
 * Design and test your application so that arbitrary changes in the domain model are reflected throughout the API and the application, without putting it into an invalid state. 
 * Don't be afraid to bind UI directly to domain models if/when appropriate
 
-# Software Architectural Principles
+# Advantages of Decoupled and Centralized Domain Models
 
-1. The presentation logic should be separated from the business logic
-2. The domain model should be ignorant of the persistenace mechanism of data
-3. Interface segregation principle - interfaces are small
-4. Dependency inversion principle - 
+DoMo can be used to manage the entire state of your application in a single location (the data store) in a stand-alone project. This simplifies many traditional tasks:
+
+* Testing 
+* Changing the persistence mechanism of the data 
+* Creating new applications with same data state
+* Synchronizing state over a network 
+* Taking snap shots of the application state (e.g. auto-backup)
+* Creating undo/redo systems
+* Logging 
+* Playback 
 
 # Domain Driven Design Principles
 
@@ -117,39 +113,19 @@ Eric Evans wrote the following insightful guidance in a white-paper called [Doma
 
 > The domain objects, free of the responsibility of displaying themselves, storing themselves, managing application tasks, and so forth, can be focused on expressing the domain model. This allows a model to evolve to be rich enough and clear enough to capture essential business knowledge and put it to work. 
 
-# Domain Driven Architectural Layers 
-
-Domain driven design principles encourage the separation of applications into four distinct layers:
-
-1. Presentation
-2. Application
-3. Domain
-4. Infrastructure 
 
 # Further Reading
 
-* https://www.pluralsight.com/blog/software-development/domain-driven-design-csharp
-* https://www.domainlanguage.com/wp-content/uploads/2016/05/DDD_Reference_2015-03.pdf
-* https://docs.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/ddd-oriented-microservice
-* https://www.methodsandtools.com/archive/archive.php?id=97
-* https://en.wikipedia.org/wiki/Multitier_architecture
-* https://en.wikipedia.org/wiki/Domain-driven_design
+* [Domain-Driven Design Reference](https://www.domainlanguage.com/wp-content/uploads/2016/05/DDD_Reference_2015-03.pdf) - Eric Evans
 
-* https://ayende.com/blog/3137/infrastructure-ignorance
-* https://docs.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/net-core-microservice-domain-model
-* https://docs.microsoft.com/en-us/archive/msdn-magazine/2013/august/data-points-coding-for-domain-driven-design-tips-for-data-focused-devs
-* https://github.com/heynickc/awesome-ddd
+* [Tackle Business Complexity in a Microservice with DDD and CQRS Patterns](https://docs.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/) - MSDN .NET Application Architecture Guid
 
-https://jeffreypalermo.com/2008/07/the-onion-architecture-part-1/
-https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
-https://docs.microsoft.com/en-us/previous-versions/msp-n-p/ff649690(v=pandp.10)
+* [Data Points - Coding for Domain-Driven Design: Tips for Data-Focused Devs](https://docs.microsoft.com/en-us/archive/msdn-magazine/2013/august/data-points-coding-for-domain-driven-design-tips-for-data-focused-devs) - Julie Lerhman, MSDN Magazine, Volume 28 Number 8 August 2013
 
 # Acknowledgements 
 
 * The VIM development team
-* Martin Fowler
-* Bob Martin
-* Eric 
+
 
 
 
