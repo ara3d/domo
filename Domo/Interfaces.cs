@@ -9,16 +9,17 @@ namespace Domo
     public enum RepositoryChangedEvent
     {
         RepositoryAdded,
-        RepositoryRemoved,
-        DomainModelAdded,
-        DomainModelRemoved,
-        DomainModelUpdated,
+        RepositoryDeleted,
+        ModelAdded,
+        ModelRemoved,
+        ModelUpdated,
+        ModelInvalid,
     }
 
     public class RepositoryChangeArgs : EventArgs
     {
         public IRepository Repository { get; set; }
-        public Guid DomainModelId { get; set; }
+        public Guid ModelId { get; set; }
         public object OldValue { get; set; }
         public object NewValue { get; set; }
         public RepositoryChangedEvent ChangeType { get; set; }
@@ -36,7 +37,7 @@ namespace Domo
         /// Adds a repository to the store. The DataStore is now
         /// responsible for disposing the repository
         /// </summary>
-        void AddRepository(IRepository repo);
+        void AddRepository(IRepository repository);
 
         /// <summary>
         /// Geta a shallow copy of all of the repositories managed
@@ -55,11 +56,6 @@ namespace Domo
         IRepository GetRepository(Type type);
 
         /// <summary>
-        /// Called prior to a change to a repository
-        /// </summary>
-        event EventHandler<RepositoryChangeArgs> RepositoryChanging;
-
-        /// <summary>
         /// Called after a change to a repository 
         /// </summary>
         event EventHandler<RepositoryChangeArgs> RepositoryChanged;
@@ -70,7 +66,7 @@ namespace Domo
     /// or a single domain model (ISingletonRepository).
     /// A repository is responsible for managing the actual state of the domain model, and
     /// supports Create, Read, Update, and Delete (CRUD) operations. 
-    /// Repositories are stored in a Data Store. A Repository's Guid is a compile-time constant that
+    /// Repositories are stored in a Value Store. A Repository's Guid is a compile-time constant that
     /// defines its identity across processes, and versions. This is useful for serialization
     /// of repositories, and having different versions of a repsitory. 
     /// When disposed, all domain models are disposed.
@@ -92,7 +88,7 @@ namespace Domo
         /// <summary>
         /// The type of the model objects stored in in this particular repository 
         /// </summary>
-        Type ModelType { get; }
+        Type ValueType { get; }
 
         /// <summary>
         /// Returns the model 
@@ -105,55 +101,62 @@ namespace Domo
         bool Update(Guid modelId, Func<object, object> updateFunc);
 
         /// <summary>
-        /// Returns true if the state is a valid transition from the current state. 
+        /// Returns true if the state is valid, or false otherwise.
         /// </summary>
-        bool Validate(Guid modelId, object state);
+        bool Validate(object state);
 
         /// <summary>
         /// Creates a new domain model given the existing state. 
         /// </summary>
-        IDomainModel Create(object state);
+        IModel Create(object state);
 
         /// <summary>
-        /// Deletes the specified domain model. 
+        /// Deletes the specified domain model.  
         /// </summary>
-        bool Delete(Guid modelId);
+        void Delete(Guid modelId);
 
         /// <summary>
         /// Returns all of the managed domain models at the current moment in time. 
         /// </summary>
-        IReadOnlyList<IDomainModel> GetDomainModels();
+        IReadOnlyList<IModel> GetModels();
+
+        /// <summary>
+        /// Returns true if the model exists, or false otherwise
+        /// </summary>
+        bool ModelExists(Guid modelId);
+
+        /// <summary>
+        /// Called after a change to a repository 
+        /// </summary>
+        event EventHandler<RepositoryChangeArgs> RepositoryChanged;
     }
 
     /// <summary>
     /// Strongly typed repository. The T object can be any C# type, but it is strongly recommended to be immutable.
-    /// Reference between data models should be created via DomainModelReference classes.
+    /// Reference between data models should be created via ModelReference classes.
     /// </summary>
-    public interface IRepository<T>
+    public interface IRepository<TValue>
         : IRepository
     {
         /// <summary>
         /// Returns the concrete model stored in the repository. 
         /// </summary>
-        T Read(Guid modelId);
+        TValue Read(Guid modelId);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        bool Update(Guid modelId, Func<T,T> updateFunc);
+        bool Update(Guid modelId, Func<TValue,TValue> updateFunc);
 
-        bool Validate(Guid modelId, T state);
+        bool Validate(TValue value);
 
-        IDomainModel<T> Create(T state);
+        IModel<TValue> Create(TValue value);
 
-        new IReadOnlyList<IDomainModel<T>> GetDomainModels();
+        new IReadOnlyList<IModel<TValue>> GetModels();
     }
 
     /// <summary>
     /// An aggregate repository manages a collection of domain models. 
     /// </summary>
     public interface IAggregateRepository<T> : 
-        IRepository<T>, INotifyCollectionChanged, IList<IDomainModel<T>>
+        IRepository<T>, INotifyCollectionChanged
     {
     }
 
@@ -168,14 +171,14 @@ namespace Domo
         /// <summary>
         /// The domain model associated with the repository 
         /// </summary>
-        IDomainModel<T> Model { get; }
+        IModel<T> Model { get; }
     }
 
     /// <summary>
     /// A Domain Model is a wrapper around a single state value assumed to be immutable.
     /// If the state value is replaced with a new one, it triggers a PropertyChanged
-    /// event with a null parameter. This allows Views or View Models
-    /// to respond to changes in a domain model. 
+    /// event, however the parameter name will all be String.Empty.
+    /// This allows Views or View Models to respond to changes in a domain model. 
     /// Domain models can refer 
     /// (a guid) to identify the model across different states.
     /// The state type (T) can be any C# type but is strongly recommended to be immutable.
@@ -184,7 +187,7 @@ namespace Domo
     /// This enables domain models to support data binding to views or view models as desired.
     /// When Disposed all events handlers are removed. 
     /// </summary>
-    public interface IDomainModel :
+    public interface IModel :
         INotifyPropertyChanged, IDisposable
     {
         /// <summary>
@@ -192,20 +195,22 @@ namespace Domo
         /// </summary>
         Guid Id { get; }
 
-        object Data { get; set; }
+        object Value { get; set; }
 
-        Type DataType { get; }
+        Type ValueType { get; }
 
         IRepository Repository { get; }
     }
 
     /// <summary>
-    /// Type safe domain model
+    /// Type safe model. The type parameter can be a class or struct. It is recommended that the
+    /// type parameter is type-safe.
+    /// Do not derive your classes from this class. 
     /// </summary>
-    public interface IDomainModel<T> 
-        : IDomainModel
+    public interface IModel<TValue> 
+        : IModel
     {
-        new T Data { get; set; }
-        new IRepository<T> Repository { get; }
+        new TValue Value { get; set; }
+        new IRepository<TValue> Repository { get; }
     }
 }
