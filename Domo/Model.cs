@@ -19,14 +19,8 @@ namespace Domo
 
         public TValue Value
         {
-            get => Repository.Read(Id);
-            set
-            {
-                if (Repository.Update(Id, _ => value))
-                {
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
-                }
-            }
+            get => Repository.GetModel(Id).Value;
+            set => Repository.Update(Id, _ => value);
         }
 
         object IModel.Value
@@ -42,5 +36,8 @@ namespace Domo
 
         IRepository IModel.Repository 
             => Repository;
+
+        public void TriggerChangeNotification()
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
     }
 }

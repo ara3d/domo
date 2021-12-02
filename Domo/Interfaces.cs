@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -37,7 +36,7 @@ namespace Domo
         /// Adds a repository to the store. The DataStore is now
         /// responsible for disposing the repository
         /// </summary>
-        void AddRepository(IRepository repository);
+        IRepository AddRepository(IRepository repository);
 
         /// <summary>
         /// Geta a shallow copy of all of the repositories managed
@@ -65,7 +64,7 @@ namespace Domo
     /// A repository is a container for either zero or more domain models (an IAggregateRepository)
     /// or a single domain model (ISingletonRepository).
     /// A repository is responsible for managing the actual state of the domain model, and
-    /// supports Create, Read, Update, and Delete (CRUD) operations. 
+    /// supports Create, GetModel, Update, and Delete (CRUD) operations. 
     /// Repositories are stored in a Value Store. A Repository's Guid is a compile-time constant that
     /// defines its identity across processes, and versions. This is useful for serialization
     /// of repositories, and having different versions of a repsitory. 
@@ -93,7 +92,7 @@ namespace Domo
         /// <summary>
         /// Returns the model 
         /// </summary>
-        object Read(Guid modelId);
+        IModel GetModel(Guid modelId);
 
         /// <summary>
         /// Call this function to attempt a change in the state of particular repository. 
@@ -141,7 +140,7 @@ namespace Domo
         /// <summary>
         /// Returns the concrete model stored in the repository. 
         /// </summary>
-        TValue Read(Guid modelId);
+        IModel<TValue> GetModel(Guid modelId);
 
         bool Update(Guid modelId, Func<TValue,TValue> updateFunc);
 
@@ -191,15 +190,33 @@ namespace Domo
         INotifyPropertyChanged, IDisposable
     {
         /// <summary>
-        /// Represents this particular domain model. Used for creating serializable references 
+        /// Represents this particular domain model. Is persistent, and does not change
+        /// if the underlying value changed. Useful for creating serializable references 
         /// </summary>
         Guid Id { get; }
 
+        /// <summary>
+        /// The underlying value or entity of the model. The actual value
+        /// is stored in a repository usign the Guid as a key. 
+        /// </summary>
         object Value { get; set; }
 
+        /// <summary>
+        /// The type of the value or entity.
+        /// </summary>
         Type ValueType { get; }
 
+        /// <summary>
+        /// The in-memory backing storage for the model values
+        /// </summary>
         IRepository Repository { get; }
+
+        /// <summary>
+        /// Called by the repository to identify when changes happen.
+        /// This invokes the INotifyPropertyChanged.PropertyChanged event
+        /// with the parameter name set to string.Empty.
+        /// </summary>
+        void TriggerChangeNotification();
     }
 
     /// <summary>
@@ -208,9 +225,11 @@ namespace Domo
     /// Do not derive your classes from this class. 
     /// </summary>
     public interface IModel<TValue> 
-        : IModel
+        : IModel 
     {
         new TValue Value { get; set; }
         new IRepository<TValue> Repository { get; }
     }
+
+    public interface IObservableList<T> : IList<T>, INotifyCollectionChanged { }
 }

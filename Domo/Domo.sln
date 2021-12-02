@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domo.Tests", "..\Domo.Tests
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domo.SampleModels", "..\Domo.SampleModels\Domo.SampleModels.csproj", "{CB878C9F-696E-4C76-930C-96E1B3BE2254}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domo.Sample.Services", "..\Domo.Sample.Services\Domo.Sample.Services.csproj", "{2F6B1606-2565-415D-A4E4-0F43E1B54AF6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{CB878C9F-696E-4C76-930C-96E1B3BE2254}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CB878C9F-696E-4C76-930C-96E1B3BE2254}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CB878C9F-696E-4C76-930C-96E1B3BE2254}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2F6B1606-2565-415D-A4E4-0F43E1B54AF6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F6B1606-2565-415D-A4E4-0F43E1B54AF6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F6B1606-2565-415D-A4E4-0F43E1B54AF6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F6B1606-2565-415D-A4E4-0F43E1B54AF6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -31,13 +31,19 @@ namespace Domo
             _validatorFunc = null;
         }
 
-        object IRepository.Read(Guid modelId)
-            => Read(modelId);
+        IModel IRepository.GetModel(Guid modelId)
+            => GetModel(modelId);
 
         public bool Update(Guid modelId, Func<T, T> updateFunc)
         {
-            var oldVal = Read(modelId);
+            var model = GetModel(modelId);
+            var oldVal = model.Value;
             var newVal = updateFunc(oldVal);
+            if (oldVal.Equals(newVal))
+            {
+                // When there is no difference in the values there is no need to trigger a change
+                return false;
+            }
             var args = new RepositoryChangeArgs
             {
                 ChangeType = RepositoryChangedEvent.ModelUpdated,
@@ -52,6 +58,7 @@ namespace Domo
                 return false;
             }
             _dict[modelId] = (newVal, _dict[modelId].Item2);
+            model.TriggerChangeNotification();
             RepositoryChanged?.Invoke(this, args);
             return true;
         }
@@ -77,8 +84,8 @@ namespace Domo
 
         public event EventHandler<RepositoryChangeArgs> RepositoryChanged;
 
-        public T Read(Guid modelId)
-            => _dict[modelId].Item1;
+        public IModel<T> GetModel(Guid modelId)
+            => _dict[modelId].Item2;
 
         public bool Update(Guid modelId, Func<object, object> updateFunc)
             => Update(modelId, (T x) => (T)updateFunc(x));

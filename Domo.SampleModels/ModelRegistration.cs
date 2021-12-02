@@ -11,7 +11,7 @@ namespace Domo.SampleModels
 
     public readonly record struct Error(string Category, string Message);
 
-    public readonly record struct User(string Name);
+    public readonly record struct User(string Name, DateTimeOffset LogInTime);
 
     public readonly record struct Folders(string ApplicationFolder, string LogFolder, string TempFolder, string DocumentFiles);
 
@@ -23,15 +23,13 @@ namespace Domo.SampleModels
 
     public readonly record struct EnvironmentVariable(string Name, string Value);
 
+    public readonly record struct Command(string Name, string Data);
+
     public readonly record struct Macro(string Name, IReadOnlyList<Command> Commands);
 
     public readonly record struct RecentFile(string Path, DateTimeOffset DateOpened);
 
     public readonly record struct ChangeRecord(string Data, DateTimeOffset DateChanged);
-
-    public readonly record struct BackupSettings(string BackupFilePath, TimeSpan Frequency);
-
-    public readonly record struct Command(string Name, string Data);
 
     public readonly record struct KeyBindings(string Key1, string Key2, string Command);
 
@@ -46,6 +44,8 @@ namespace Domo.SampleModels
     public readonly record struct CurrentFile(string FilePath);
 
     public readonly record struct UndoItem(Guid RepoId, Guid ModelId, string OldValue, string NewValue);
+
+    public readonly record struct UndoState(int CurrentIndex, IReadOnlyList<UndoItem> UndoItems);
 
     public readonly record struct Freeze();
 
@@ -63,6 +63,8 @@ namespace Domo.SampleModels
     }
 
     public readonly record struct ViewSettings(ViewTypeEnum ViewType);
+
+    public readonly record struct ClickAnimation(Point Position, DateTimeOffset Time);
 
     #endregion
 
@@ -84,45 +86,62 @@ namespace Domo.SampleModels
 
     public record WriteText(Point Position, string Text) : DrawingCommand;
 
+    public record Select(IModel<DrawingShape> Shape) : DrawingCommand;
+
     public record Draw(DrawingShape Shape) : DrawingCommand;
 
     public record Clear() : DrawingCommand;
+
+    public record CanvasClick(Point Position) : DrawingCommand;
 
     #endregion
 
     public static class ModelRegistration
     {
-        public static IRepository CreateAggregateRepository<T>(Guid id, Version? version = null, Func<T, bool>? validator = null)
+        public static IRepository<T> AddTypedRepository<T>(this IDataStore store, IRepository<T> repository)
+            => (IRepository<T>)store.AddRepository(repository);
+
+        public static IRepository<T> CreateAggregateRepository<T>(Guid id, Version? version = null, Func<T, bool>? validator = null)
             => new AggregateRepository<T>(id, version ?? new Version(), validator);
 
-        public static IRepository CreateSingletonRepository<T>(Guid id, Version? version = null, T? value = default, Func<T, bool>? validator = null)
+        public static IRepository<T> CreateSingletonRepository<T>(Guid id, Version? version = null, T? value = default, Func<T, bool>? validator = null)
             where T: new()
             => new SingletonRepository<T>(id, version ?? new Version(), value ?? new T(), validator);
 
-        public static void RegisterSingleton<T>(this IDataStore store, T? value = default) where T : new() 
-            => store.AddRepository(CreateSingletonRepository(Guid.NewGuid(), new Version(), value ?? new T(), null));
+        public static IRepository<T> RegisterSingleton<T>(this IDataStore store, T? value = default) where T : new() 
+            => store.AddTypedRepository(CreateSingletonRepository(Guid.NewGuid(), new Version(), value ?? new T(), null));
 
-        public static void RegisterAggregate<T>(this IDataStore store)
-            => store.AddRepository(CreateAggregateRepository<T>(Guid.NewGuid(), new Version(), null));
+        public static IRepository<T> RegisterAggregate<T>(this IDataStore store)
+            => store.AddTypedRepository(CreateAggregateRepository<T>(Guid.NewGuid(), new Version(), null));
 
         public static IDataStore RegisterRepos(IDataStore store)
         {
-            store.RegisterAggregate<DrawingCommand>();
             store.RegisterAggregate<LogItem>();
             store.RegisterAggregate<Error>();
             store.RegisterSingleton<User>();
             store.RegisterSingleton<UserPreferences>();
             store.RegisterAggregate<CommandLineArg>();
             store.RegisterAggregate<EnvironmentVariable>();
-            store.RegisterAggregate<>();
+            store.RegisterAggregate<RecentFile>();
+            store.RegisterAggregate<ChangeRecord>();
+            store.RegisterAggregate<Command>();
+            store.RegisterAggregate<Macro>();
+            store.RegisterAggregate<Job>();
+            
+            store.RegisterSingleton<ActiveRepo>();
+            store.RegisterSingleton<ViewSettings>();
+            store.RegisterAggregate<ClickAnimation>();
+
+            store.RegisterAggregate<DrawingShape>();
+            store.RegisterAggregate<DrawingCommand>();
+            store.RegisterSingleton<CurrentFile>();
+            store.RegisterSingleton<LastInput>();
+            store.RegisterAggregate<UndoItem>();
+            store.RegisterSingleton<UndoState>();
             return store;
 
             /*   
     
-    
-            public readonly record struct RecentFile(string Path, DateTimeOffset DateOpened);
-    
-            public readonly record struct ChangeRecord(string Data, DateTimeOffset DateChanged);
     
             public readonly record struct BackupSettings(string BackupFilePath, TimeSpan Frequency);
     

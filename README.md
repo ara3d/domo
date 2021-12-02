@@ -1,35 +1,39 @@
 #  Domo 
 
-> <i>The key to controlling complexity is a good domain model, a model that goes beyond a surface vision of a domain by introducing an underlying structure, which gives the software developers the leverage they need. A good domain model can be incredibly valuable, but it’s not something that’s easy to make. Few people can do it well, and it’s very hard to teach.</i> <p> - Martin Fowler, 2003 in the preface to Domain-Driven Design: Tackling Complexity in the Heart of Software by Eric Evans
+> <i>The key to controlling complexity is a good domain model, a model that goes beyond a surface vision of a domain by introducing an underlying structure, which gives the software developers the leverage they need. A good domain model can be incredibly valuable, but it’s not something that’s easy to make.</i> <p> - Martin Fowler, 2003 in the preface to Domain-Driven Design: Tackling Complexity in the Heart of Software by Eric Evans
 
- Domo (short for "Domain Modeling") is a .NET Standard 2.0 library that aids in building layered architecture applications inspired by good software engineering principles and best practices. Domo is inpsired by some of the lessons from Domain Driven Design, without being overly dogmatic.
+ Domo (short for "Domain Modeling") is a .NET Standard 2.0 library that aids in building layered architecture applications inspired by good software engineering principles and best practices. 
+ 
+ Domo is inpsired by some of the lessons from Domain Driven Design, without being overly dogmatic.
 
  Domo offers a solution for defining data models as simple immutable objects that are unaware of the infrastructure and application logic, while providing support for data binding, and offering advantages of a centralized data management system (like Redux).
 
  Domo is an unopinionated cross-platform library with no dependencies and works well with other application frameworks and libraries (e.g., Entity Framework, Prism, MVVM Light, WPF Toolkit, etc.).
 
-# How  Domo Works 
+# How Domo Works 
 
  Domo allow you to define the domain model using regular C# classes, structs, or records. There is no requirement to decorate the model type with special attributes, inherit from base classes, or implement a particular interface. 
 
  Domo wraps models types in an interface called `IModel<T>`. This interface 
 
 1. provides a GUID to facilitate maintaining references when persisting the model
-1. implements `INotifyPropertyChanged` to enable data binding to Views or ViewModels
+1. implements `INotifyPropertyChanged` to inform of changes to the value
 1. references the repository which created and owns the model
 1. removes all event handlers in `IDisposable.Dispose()` to avoid memory leaks
 
 ```
-public interface IModel<T> 
+public interface IModel<TValue> 
     : INotifyPropertyChanged, IDisposable
 {
     Guid Id { get; }
-    T Value { get; set; }
-    IRepository<T> Repository { get; }
+    TValue Value { get; set; }
+    IRepository<TValue> Repository { get; }
 }
 ```
 
-It is strongly recommended to make the model implementation immutable. The property changed event handler is triggered when the model is changed. 
+ Notice that the model can be parameterized with structs, classes, or records. In DDD parlance this would be the difference between a "value" or "entity". Either way it is strongly recommended to use immutable types. 
+ 
+ The property changed event handler is triggered when a new value is provided. 
 
 `IModel` instances are created, retrieved, updated, validated, and deleted by a repository class. This repository class ultimately is responsible for storing the model data is stored. 
 
@@ -101,6 +105,8 @@ Domo can be used to manage the entire state of your application in a single loca
 * Logging 
 * Playback 
 
+An example of centralized state management is [Redux](https://redux.js.org/) a popular JavaScript state management library.
+
 # Domain Driven Design Principles
 
 Eric Evans wrote the following insightful guidance in a white-paper called [Domain-Driven Design Reference](https://www.domainlanguage.com/wp-content/uploads/2016/05/DDD_Reference_2015-03.pdf) which are just plain old good ideas, regardless of whether one chooses to follow all of the recommendations of DDD or not. 
@@ -111,6 +117,13 @@ Eric Evans wrote the following insightful guidance in a white-paper called [Doma
 
 > The domain objects, free of the responsibility of displaying themselves, storing themselves, managing application tasks, and so forth, can be focused on expressing the domain model. This allows a model to evolve to be rich enough and clear enough to capture essential business knowledge and put it to work. 
 
+# Adding a Service Layer
+
+Services can be useful as a mediating layer between the repositories (where the data models are stored) and the rest of the application such as the presentation layer, or the application logic. 
+
+Services are a good place to introduce commands that can affect the state of application in a consistent and reproducible manner, that allows observation. For example, logging or macro systems. 
+
+While much of the application should be written in a robust manner so to respond to arbitrary updates in state, services can enable transactional updates, and more complex logic for validation that can stretch across multiple repositores. 
 
 # Further Reading
 
