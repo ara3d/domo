@@ -21,7 +21,7 @@
 1. references the repository which created and owns the model
 1. removes all event handlers in `IDisposable.Dispose()` to avoid memory leaks
 
-```
+```csharp
 public interface IModel<TValue> 
     : INotifyPropertyChanged, IDisposable
 {
@@ -37,7 +37,7 @@ public interface IModel<TValue>
 
 `IModel` instances are created, retrieved, updated, validated, and deleted by a repository class. This repository class ultimately is responsible for storing the model data is stored. 
 
-```
+```csharp
 public interface IRepository<T>
     : IDisposable
 {
@@ -54,7 +54,7 @@ public interface IRepository<T>
 
 There are two types of repositories, aggregate repositories which contain a collection of data models, and singleton repositories which manage precisely one data model.
 
-```
+```csharp
     public interface IAggregateRepository<T> 
         : IRepository<T>, INotifyCollectionChanged
     { }
@@ -66,7 +66,7 @@ There are two types of repositories, aggregate repositories which contain a coll
 
 All of the active repositories in an application are managed through an `IDataStore`
 
-```
+```csharp
 public interface IDataStore
     : IDisposable
 {
