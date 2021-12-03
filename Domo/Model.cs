@@ -19,7 +19,7 @@ namespace Domo
 
         public TValue Value
         {
-            get => Repository.GetModel(Id).Value;
+            get => Repository.GetValue(Id);
             set => Repository.Update(Id, _ => value);
         }
 

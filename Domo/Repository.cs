@@ -34,6 +34,9 @@ namespace Domo
         IModel IRepository.GetModel(Guid modelId)
             => GetModel(modelId);
 
+        object IRepository.GetValue(Guid modelId)
+            => GetModel(modelId);
+
         public bool Update(Guid modelId, Func<T, T> updateFunc)
         {
             var model = GetModel(modelId);
@@ -46,14 +49,14 @@ namespace Domo
             }
             var args = new RepositoryChangeArgs
             {
-                ChangeType = RepositoryChangedEvent.ModelUpdated,
+                ChangeType = RepositoryChangeType.ModelUpdated,
                 ModelId = modelId,
                 NewValue = newVal,
                 OldValue = oldVal
             };
             if (!Validate(newVal))
             {
-                args.ChangeType = RepositoryChangedEvent.ModelInvalid;
+                args.ChangeType = RepositoryChangeType.ModelInvalid;
                 RepositoryChanged?.Invoke(this, args); 
                 return false;
             }
@@ -69,7 +72,7 @@ namespace Domo
         public bool Validate(object state)
             => _validatorFunc(state);
 
-        public IModel<T> Create(T state)
+        public IModel<T> Add(T state)
         {
             if (IsSingleton && _dict.Count != 0)
                 throw new Exception("Singleton repository cannot have more than one model");
@@ -87,11 +90,14 @@ namespace Domo
         public IModel<T> GetModel(Guid modelId)
             => _dict[modelId].Item2;
 
+        public T GetValue(Guid modelId)
+            => _dict[modelId].Item1;
+
         public bool Update(Guid modelId, Func<object, object> updateFunc)
             => Update(modelId, (T x) => (T)updateFunc(x));
 
-        public IModel Create(object state)
-            => Create((T)state);
+        public IModel Add(object state)
+            => Add((T)state);
 
         public virtual void Delete(Guid id)
         {
@@ -124,7 +130,7 @@ namespace Domo
         public SingletonRepository(Guid id, Version version, T value, Func<T, bool> validatorFunc = null)
             : base(id, version, x => validatorFunc?.Invoke((T)x) ?? true)
         {
-            Model = Create(value);
+            Model = Add(value);
         }
 
         public override bool IsSingleton => true;

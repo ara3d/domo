@@ -29,7 +29,9 @@ namespace Domo.SampleModels
 
     public readonly record struct RecentFile(string Path, DateTimeOffset DateOpened);
 
-    public readonly record struct ChangeRecord(string Data, DateTimeOffset DateChanged);
+    public enum ChangeType { Added, Removed, Changed }
+
+    public readonly record struct ChangeRecord(string Data, Guid ModelId, ChangeType ChangeType, DateTimeOffset DateChanged);
 
     public readonly record struct KeyBindings(string Key1, string Key2, string Command);
 
@@ -98,46 +100,31 @@ namespace Domo.SampleModels
 
     public static class ModelRegistration
     {
-        public static IRepository<T> AddTypedRepository<T>(this IDataStore store, IRepository<T> repository)
-            => (IRepository<T>)store.AddRepository(repository);
-
-        public static IRepository<T> CreateAggregateRepository<T>(Guid id, Version? version = null, Func<T, bool>? validator = null)
-            => new AggregateRepository<T>(id, version ?? new Version(), validator);
-
-        public static IRepository<T> CreateSingletonRepository<T>(Guid id, Version? version = null, T? value = default, Func<T, bool>? validator = null)
-            where T: new()
-            => new SingletonRepository<T>(id, version ?? new Version(), value ?? new T(), validator);
-
-        public static IRepository<T> RegisterSingleton<T>(this IDataStore store, T? value = default) where T : new() 
-            => store.AddTypedRepository(CreateSingletonRepository(Guid.NewGuid(), new Version(), value ?? new T(), null));
-
-        public static IRepository<T> RegisterAggregate<T>(this IDataStore store)
-            => store.AddTypedRepository(CreateAggregateRepository<T>(Guid.NewGuid(), new Version(), null));
 
         public static IDataStore RegisterRepos(IDataStore store)
         {
-            store.RegisterAggregate<LogItem>();
-            store.RegisterAggregate<Error>();
-            store.RegisterSingleton<User>();
-            store.RegisterSingleton<UserPreferences>();
-            store.RegisterAggregate<CommandLineArg>();
-            store.RegisterAggregate<EnvironmentVariable>();
-            store.RegisterAggregate<RecentFile>();
-            store.RegisterAggregate<ChangeRecord>();
-            store.RegisterAggregate<Command>();
-            store.RegisterAggregate<Macro>();
-            store.RegisterAggregate<Job>();
+            store.AddAggregateRepository<LogItem>();
+            store.AddAggregateRepository<Error>();
+            store.AddSingletonRepository<User>();
+            store.AddSingletonRepository<UserPreferences>();
+            store.AddAggregateRepository<CommandLineArg>();
+            store.AddAggregateRepository<EnvironmentVariable>();
+            store.AddAggregateRepository<RecentFile>();
+            store.AddAggregateRepository<ChangeRecord>();
+            store.AddAggregateRepository<Command>();
+            store.AddAggregateRepository<Macro>();
+            store.AddAggregateRepository<Job>();
             
-            store.RegisterSingleton<ActiveRepo>();
-            store.RegisterSingleton<ViewSettings>();
-            store.RegisterAggregate<ClickAnimation>();
+            store.AddSingletonRepository<ActiveRepo>();
+            store.AddSingletonRepository<ViewSettings>();
+            store.AddAggregateRepository<ClickAnimation>();
 
-            store.RegisterAggregate<DrawingShape>();
-            store.RegisterAggregate<DrawingCommand>();
-            store.RegisterSingleton<CurrentFile>();
-            store.RegisterSingleton<LastInput>();
-            store.RegisterAggregate<UndoItem>();
-            store.RegisterSingleton<UndoState>();
+            store.AddAggregateRepository<DrawingShape>();
+            store.AddAggregateRepository<DrawingCommand>();
+            store.AddSingletonRepository<CurrentFile>();
+            store.AddSingletonRepository<LastInput>();
+            store.AddAggregateRepository<UndoItem>();
+            store.AddSingletonRepository<UndoState>();
             return store;
 
             /*   

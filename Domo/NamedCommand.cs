@@ -22,7 +22,7 @@ namespace Domo
             ExecuteDelegate = execute;
             CanExecuteDelegate = canExecute;
             repository.RepositoryChanged +=
-                (_, _) => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+                (_1, _2) => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public bool CanExecute(object parameter = null)

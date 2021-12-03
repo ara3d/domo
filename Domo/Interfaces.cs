@@ -5,7 +5,7 @@ using System.ComponentModel;
 
 namespace Domo
 {
-    public enum RepositoryChangedEvent
+    public enum RepositoryChangeType
     {
         RepositoryAdded,
         RepositoryDeleted,
@@ -21,7 +21,7 @@ namespace Domo
         public Guid ModelId { get; set; }
         public object OldValue { get; set; }
         public object NewValue { get; set; }
-        public RepositoryChangedEvent ChangeType { get; set; }
+        public RepositoryChangeType ChangeType { get; set; }
     }
 
     /// <summary>
@@ -90,9 +90,14 @@ namespace Domo
         Type ValueType { get; }
 
         /// <summary>
-        /// Returns the model 
+        /// Returns the model stored in the repository
         /// </summary>
         IModel GetModel(Guid modelId);
+
+        /// <summary>
+        /// Returns the value stored in the repository. 
+        /// </summary>
+        object GetValue(Guid modelId);
 
         /// <summary>
         /// Call this function to attempt a change in the state of particular repository. 
@@ -105,9 +110,9 @@ namespace Domo
         bool Validate(object state);
 
         /// <summary>
-        /// Creates a new domain model given the existing state. 
+        /// Creates a new domain model given the existing state and adds it to the repository.
         /// </summary>
-        IModel Create(object state);
+        IModel Add(object state);
 
         /// <summary>
         /// Deletes the specified domain model.  
@@ -138,15 +143,20 @@ namespace Domo
         : IRepository
     {
         /// <summary>
-        /// Returns the concrete model stored in the repository. 
+        /// Returns the model stored in the repository. 
         /// </summary>
-        IModel<TValue> GetModel(Guid modelId);
+        new IModel<TValue> GetModel(Guid modelId);
+
+        /// <summary>
+        /// Returns the value stored in the repository. 
+        /// </summary>
+        TValue GetValue(Guid modelId);
 
         bool Update(Guid modelId, Func<TValue,TValue> updateFunc);
 
         bool Validate(TValue value);
 
-        IModel<TValue> Create(TValue value);
+        IModel<TValue> Add(TValue value);
 
         new IReadOnlyList<IModel<TValue>> GetModels();
     }
@@ -230,6 +240,4 @@ namespace Domo
         new TValue Value { get; set; }
         new IRepository<TValue> Repository { get; }
     }
-
-    public interface IObservableList<T> : IList<T>, INotifyCollectionChanged { }
 }

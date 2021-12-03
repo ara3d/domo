@@ -15,22 +15,17 @@ namespace Domo.Sample.Services
         }
 
         public void ApplicationStart()
-            => Repository.Create(new("Application Started", DateTimeOffset.Now));
+            => Repository.Add(new("Application Started", DateTimeOffset.Now));
 
         public void ApplicationEnd()
-            => Repository.Create(new("Application Closed", DateTimeOffset.Now));
+            => Repository.Add(new("Application Closed", DateTimeOffset.Now));
     }
 
     public class FileService
     {
-
     }
 
     public class ErrorService
-    {
-    }
-
-    public interface IStatusService : ISingletonModelBackedService<Status>
     {
     }
 
@@ -46,7 +41,11 @@ namespace Domo.Sample.Services
         { }
 
         public void Log(string category, string message)
-            => Repository.Create(new LogItem(category, message, "", DateTimeOffset.Now));
+            => Repository.Add(new LogItem(category, message, "", DateTimeOffset.Now));
+    }
+
+    public interface IStatusService : ISingletonModelBackedService<Status>
+    {
     }
 
     public class StatusService : SingletonModelBackedService<Status>, IStatusService
@@ -88,7 +87,7 @@ namespace Domo.Sample.Services
             Model.Value = Model.Value with { Name = name, LogInTime = DateTimeOffset.Now };
         }
 
-        public bool CanLogin
+        public bool CanLogin 
             => !LoggedIn;
 
         public bool CanLogout
@@ -174,12 +173,39 @@ namespace Domo.Sample.Services
         public INamedCommand RedoCommand => GetCommand(nameof(Redo));
     }
 
-    public interface IChangeService
+    public interface IChangeService : IAggregateModelBackedService<ChangeRecord>
     {
     }
 
-    public class ChangeService
-    { 
+    public class ChangeService : AggregateModelBackedService<ChangeRecord>, IChangeService
+    {
+        public ChangeService(IDataStore store)
+            : base(store)
+        {
+            store.RepositoryChanged += (_, args) =>
+            {
+                switch (args.ChangeType)
+                {
+                    case RepositoryChangeType.RepositoryAdded:
+                        break;
+                    case RepositoryChangeType.RepositoryDeleted:
+                        break;
+                    case RepositoryChangeType.ModelAdded:
+                        Repository.Add(new ChangeRecord(args.NewValue?.ToString() ?? "", args.ModelId, ChangeType.Added, DateTimeOffset.Now));
+                        break;
+                    case RepositoryChangeType.ModelRemoved:
+                        Repository.Add(new ChangeRecord("", args.ModelId, ChangeType.Removed, DateTimeOffset.Now));
+                        break;
+                    case RepositoryChangeType.ModelUpdated:
+                        Repository.Add(new ChangeRecord(args.NewValue?.ToString() ?? "", args.ModelId, ChangeType.Changed, DateTimeOffset.Now));
+                        break;
+                    case RepositoryChangeType.ModelInvalid:
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            };
+        }
     }
 
     public class KeyboardService

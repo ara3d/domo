@@ -84,7 +84,7 @@ namespace Domo
             Repository.RepositoryChanged += OnRepositoryChanged;
         }
 
-        public event NotifyCollectionChangedEventHandler? CollectionChanged
+        public event NotifyCollectionChangedEventHandler CollectionChanged
         {
             add => Repository.CollectionChanged += value;
             remove => Repository.CollectionChanged -= value;

@@ -7,7 +7,7 @@ namespace Domo
 {
     public class DataStore : IDataStore
     {
-        private IList<IRepository> _repositories = new List<IRepository>();
+        private readonly IList<IRepository> _repositories = new List<IRepository>();
 
         public void Dispose()
         {
@@ -15,12 +15,13 @@ namespace Domo
             this.DeleteAllRepositories();
         }
 
-        public void AddRepository(IRepository repository)
+        public IRepository AddRepository(IRepository repository)
         {
             _repositories.Add(repository);
             RepositoryChanged?.Invoke(this, new RepositoryChangeArgs 
-                { ChangeType = RepositoryChangedEvent.RepositoryAdded, Repository = repository });
+                { ChangeType = RepositoryChangeType.RepositoryAdded, Repository = repository });
             repository.RepositoryChanged += (sender, args) => RepositoryChanged?.Invoke(sender, args);
+            return repository;
         }
 
         public IReadOnlyList<IRepository> GetRepositories()
@@ -31,7 +32,7 @@ namespace Domo
             _repositories.Remove(repository);
             repository.Dispose();
             RepositoryChanged?.Invoke(this, new RepositoryChangeArgs 
-                { ChangeType = RepositoryChangedEvent.RepositoryDeleted, Repository = repository});
+                { ChangeType = RepositoryChangeType.RepositoryDeleted, Repository = repository});
         }
 
         public IRepository GetRepository(Type type)
