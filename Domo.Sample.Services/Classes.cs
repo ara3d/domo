@@ -1,99 +1,187 @@
 ﻿using System.Collections.Specialized;
 using System.ComponentModel;
+using Domo.SampleModels;
 
 namespace Domo.Sample.Services
 {
-    public class NamedCommand : INamedCommand
+    public class CommandService
+    { }
+
+    public class ApplicationEventService : AggregateModelBackedService<ApplicationEvent>
     {
-        public NamedCommand(Delegate execute, Delegate canExecute, IRepository repository)
+        public ApplicationEventService(IDataStore store, ILogService logService) : base(store)
         {
-            Name = execute.Method.Name;
-            ExecuteDelegate = execute;
-            CanExecuteDelegate = canExecute;
-            repository.RepositoryChanged += 
-                (_, _) => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+            Repository.OnModelChanged(status => logService.Log("Application Event", status.Value.EventName));
         }
 
-        public bool CanExecute(object? parameter = null)
-            => (bool?)CanExecuteDelegate.DynamicInvoke(parameter) != false;
-        
-        public void Execute(object? parameter = null) 
-            => ExecuteDelegate.DynamicInvoke(parameter);
+        public void ApplicationStart()
+            => Repository.Create(new("Application Started", DateTimeOffset.Now));
 
-        public Delegate CanExecuteDelegate { get; }
-        public Delegate ExecuteDelegate { get; }
-        public event EventHandler? CanExecuteChanged;
-        public string Name { get; }
+        public void ApplicationEnd()
+            => Repository.Create(new("Application Closed", DateTimeOffset.Now));
     }
 
-    public class Service
+    public class FileService
     {
-        public Service(IDataStore store)
-            => Store = store;
-        public IDataStore Store { get; }
 
-        public Dictionary<string, INamedCommand> Commands = new();
-
-        public INamedCommand RegisterCommand(Delegate execute, Delegate canExecute, IRepository repository)
-        {
-            var r = new NamedCommand(execute, canExecute, repository);
-            Commands.Add(r.Name, r);
-            return r;
-        }
-
-        public INamedCommand GetCommand(string name)
-            => Commands[name];
     }
 
-    public class SingletonModelBackedService<T> : Service, ISingletonModelBackedService<T>
+    public class ErrorService
     {
-        public SingletonModelBackedService(IDataStore store)
+    }
+
+    public interface IStatusService : ISingletonModelBackedService<Status>
+    {
+    }
+
+    public interface ILogService : IAggregateModelBackedService<LogItem>
+    {
+        void Log(string category, string message);
+    }
+
+    public class LogService : AggregateModelBackedService<LogItem>, ILogService
+    {
+        public LogService(IDataStore store)
             : base(store)
-        {
-            Repository = store.GetSingletonRepository<T>();
-            Repository.RepositoryChanged += OnRepositoryChanged;
-        }
-
-        protected virtual void OnRepositoryChanged(object? sender, RepositoryChangeArgs e)
         { }
 
-        public event PropertyChangedEventHandler? PropertyChanged
+        public void Log(string category, string message)
+            => Repository.Create(new LogItem(category, message, "", DateTimeOffset.Now));
+    }
+
+    public class StatusService : SingletonModelBackedService<Status>, IStatusService
+    {
+        public StatusService(IDataStore dataStore, ILogService logService)
+            : base(dataStore)
         {
-            add => Model.PropertyChanged += value;
-            remove => Model.PropertyChanged -= value;
+            Repository.OnModelChanged(status => logService.Log("Status", status.Value.Message));
         }
 
-        public ISingletonRepository<T> Repository { get; }
-        public IModel<T> Model => Repository.Model;
-
-        public T Value
+        public string Status
         {
-            get => Model.Value;
-            set => Model.Value = value;
+            get => Model.Value.Message;
+            set => Model.Value = Model.Value with { Message = value };
         }
     }
 
-    public class AggregateModelBackedService<T> : Service, IAggregateModelBackedService<T>
+    public interface IUserService
     {
-        public AggregateModelBackedService(IDataStore store)
+        INamedCommand LoginCommand { get; }
+        INamedCommand LogoutCommand { get; }
+    }
+
+    public class UserService : SingletonModelBackedService<User>, IUserService
+    {
+        public UserService(IDataStore dataStore)
+            : base(dataStore)
+        {
+            RegisterCommand(LogIn, () => CanLogin, Repository);
+            RegisterCommand(LogOut, () => CanLogout, Repository);
+        }
+
+        public void LogIn(string name)
+        {
+            if (LoggedIn)
+                throw new Exception($"Already logged in as {Model.Value.Name}!");
+            if (string.IsNullOrWhiteSpace(name))
+                throw new Exception("name cannot be null or empty");
+            Model.Value = Model.Value with { Name = name, LogInTime = DateTimeOffset.Now };
+        }
+
+        public bool CanLogin
+            => !LoggedIn;
+
+        public bool CanLogout
+            => LoggedIn;
+
+        public void LogOut()
+            => Model.Value = Model.Value with { Name = "" };
+
+        public bool LoggedIn
+            => !string.IsNullOrWhiteSpace(Model.Value.Name);
+
+        public TimeSpan TimeLoggedIn
+            => LoggedIn ? DateTimeOffset.Now - Model.Value.LogInTime : TimeSpan.Zero;
+
+        public INamedCommand LoginCommand
+            => GetCommand(nameof(LogIn));
+
+        public INamedCommand LogoutCommand
+            => GetCommand(nameof(LogIn));
+    }
+
+    public class CommandLineService
+    {
+
+    }
+
+    public class MouseService
+    {
+
+    }
+
+    public class DrawingService
+    {
+    }
+
+    public interface IUndoService : ISingletonModelBackedService<UndoState>
+    {
+        bool CanUndo { get; }
+        bool CanRedo { get; }
+        void Undo();
+        void Redo();
+
+        INamedCommand UndoCommand { get; }
+        INamedCommand RedoCommand { get; }
+    }
+
+    public class UndoService : SingletonModelBackedService<UndoState>, IUndoService
+    {
+        public UndoService(IDataStore store)
             : base(store)
         {
-            Repository = store.GetAggregateRepository<T>();
-            Repository.RepositoryChanged += OnRepositoryChanged;
+            Store.RepositoryChanged += Store_RepositoryChanged;
+            RegisterCommand(Undo, () => CanUndo, Repository);
+            RegisterCommand(Redo, () => CanRedo, Repository);
         }
 
-        public event NotifyCollectionChangedEventHandler? CollectionChanged
+        private void Store_RepositoryChanged(object? sender, RepositoryChangeArgs e)
         {
-            add => Repository.CollectionChanged += value;
-            remove => Repository.CollectionChanged -= value;
+            // TODO: store the appropriate change. 
+            if (CanRedo)
+            {
+                // Clear all the "undo items" in the Redo stack 
+            }
         }
 
-        protected virtual void OnRepositoryChanged(object? sender, RepositoryChangeArgs e)
-        { }
+        public bool CanUndo
+            => Value.CurrentIndex >= 0;
 
-        public IAggregateRepository<T> Repository { get; }
-        public IReadOnlyList<IModel<T>> Models => Repository.GetModels();
+        public bool CanRedo
+            => Value.CurrentIndex < Value.UndoItems.Count - 1;
+
+        public void Redo()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Undo()
+        {
+            throw new NotImplementedException();
+        }
+
+        public INamedCommand UndoCommand => GetCommand(nameof(Undo));
+        public INamedCommand RedoCommand => GetCommand(nameof(Redo));
     }
 
+    public interface IChangeService
+    {
+    }
 
+    public class ChangeService
+    { 
+    }
+
+    public class KeyboardService
+    { }
 }

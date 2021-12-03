@@ -1,10 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-
-namespace Domo
+﻿namespace Domo.Tests
 {
+
+    public interface IObservableList<T> : IList<T>, INotifyCollectionChanged { }
+
     public class ObservableList<T> : IList<T>, INotifyCollectionChanged
     {
         private ObservableCollection<T> _collection;

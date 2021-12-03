@@ -1,6 +1,7 @@
-﻿using System.ComponentModel.Design;
+﻿using System;
+using System.ComponentModel.Design;
 
-namespace Domo.Sample.Services;
+namespace Domo;
 
 public class ServiceRegistry : IServiceContainer
 {
