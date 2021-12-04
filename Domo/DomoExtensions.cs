@@ -61,6 +61,6 @@ namespace Domo
             => model.Repository.Update(model.Id, updateFunc);
 
         public static string ToDebugString(this IModel model)
-            => model == null ? "null" : $"{model.Id} {model.ValueType?.Name} {model.Value}";
+            => model == null ? "null" : $"{model.Id} {model.Value}";
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Linq;
 using NUnit.Framework;
 using System.Text.Json;
@@ -22,8 +23,6 @@ namespace Domo.Tests
             Assert.AreEqual(jsonString, jsonString2);
         }
 
-        
-
         public static void OutputRepo(IRepository r)
         {
             Console.WriteLine($"{r.RepositoryId} {r.ValueType.Name} {r.GetType().Name}");
@@ -37,16 +36,52 @@ namespace Domo.Tests
             var rec = new TestRecord(1, 2);
             var store = new DataStore();
             var repo = store.AddSingletonRepository(rec);
+            var modelId = repo.Model.Id;
             OutputRepo(repo);
-            repo.Model.Value = new TestRecord(2, 3);
+            repo.Model.Value = new TestRecord(1, 3);
+            Assert.AreEqual(modelId, repo.Model.Id);
+            Assert.AreEqual(3, repo.Model.Value.Y);
             OutputRepo(repo);
-            repo.Model.Value = repo.Model.Value with { X = 3, Y = 4 };
+            repo.Model.Value = repo.Model.Value with { Y = 4 };
+            Assert.AreEqual(modelId, repo.Model.Id);
+            Assert.AreEqual(4, repo.Model.Value.Y);
             OutputRepo(repo);
-            repo.Model.Update(x => x with { X = 4, Y = 5 });
+            repo.Model.Update(x => x with { Y = 5 });
+            Assert.AreEqual(modelId, repo.Model.Id);
+            Assert.AreEqual(5, repo.Model.Value.Y);
             OutputRepo(repo);
-            repo.Update(repo.Model.Id, x => x with { X = 4, Y = 5 });
+            repo.Update(repo.Model.Id, x => x with { Y = 6 });
+            Assert.AreEqual(modelId, repo.Model.Id);
+            Assert.AreEqual(6, repo.Model.Value.Y);
             OutputRepo(repo);
         }
 
+        [Test]
+        public static void TestAggregateRepo()
+        {
+            var store = new DataStore();
+            var repo = store.AddAggregateRepository<TestRecord>();
+
+            Assert.AreEqual(0, repo.GetModels().Count);
+            var rec1 = new TestRecord { X = 1, Y = 2 };
+            var model = repo.Add(rec1);
+            var modelId = model.Id;
+            Assert.AreEqual(modelId, repo.GetModels()[0].Id);
+            Assert.AreEqual(rec1, repo.GetModels()[0].Value);
+            Assert.AreEqual(1, repo.GetModels().Count);
+            OutputRepo(repo);
+
+            var rec2 = new TestRecord { X = 3, Y = 4 };
+            var model2 = repo.Add(rec2);
+            var modelId2= model2.Id;
+            Assert.AreNotEqual(modelId2, modelId);
+            Assert.AreEqual(2, repo.GetModels().Count);
+
+            Assert.AreEqual(rec1, repo.GetValue(modelId));
+            Assert.AreEqual(rec2, repo.GetValue(modelId2));
+
+            Assert.AreEqual(modelId, repo.GetModel(modelId).Id);
+            Assert.AreEqual(modelId2, repo.GetModel(modelId2).Id);
+        }
     }
 }
