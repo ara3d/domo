@@ -60,6 +60,9 @@ namespace Domo
         public static bool Update<T>(this IModel<T> model, Func<T, T> updateFunc)
             => model.Repository.Update(model.Id, updateFunc);
 
+        public static bool Update<T>(this ISingletonRepository<T> repo, Func<T, T> updateFunc)
+            => repo.Model.Update(updateFunc);
+
         public static string ToDebugString(this IModel model)
             => model == null ? "null" : $"{model.Id} {model.Value}";
     }

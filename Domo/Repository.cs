@@ -7,6 +7,9 @@ namespace Domo
 {
     public abstract class Repository<T> : IRepository<T>
     {
+        public event EventHandler<RepositoryChangeArgs> RepositoryChanged;
+        public event NotifyCollectionChangedEventHandler CollectionChanged;
+
         protected Repository(Guid id, Version version, Func<object, bool> validatorFunc = null)
         {
             RepositoryId = id;
@@ -25,10 +28,21 @@ namespace Domo
 
         public void Dispose()
         {
-            foreach (var v in _dict.Values)
-                v.Item2.Dispose();
+            RepositoryChanged = null;
+            CollectionChanged = null;
+            Clear();
             _dict = null;
             _validatorFunc = null;
+        }
+
+        public void Clear()
+        {
+            foreach (var v in _dict.Keys.ToArray())
+            {
+                Delete(v);
+            }
+
+            _dict.Clear();
         }
 
         IModel IRepository.GetModel(Guid modelId)
@@ -63,6 +77,7 @@ namespace Domo
             _dict[modelId] = (newVal, _dict[modelId].Item2);
             model.TriggerChangeNotification();
             RepositoryChanged?.Invoke(this, args);
+            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace));
             return true;
         }
 
@@ -79,13 +94,12 @@ namespace Domo
             var id = Guid.NewGuid();
             var model = new Model<T>(id, this);
             _dict.Add(id, (state, model));
+            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add));
             return model;
         }
 
         public IReadOnlyList<IModel<T>> GetModels()
             => _dict.Values.Select(x => x.Item2).ToList();
-
-        public event EventHandler<RepositoryChangeArgs> RepositoryChanged;
 
         public IModel<T> GetModel(Guid modelId)
             => _dict[modelId].Item2;
@@ -94,7 +108,7 @@ namespace Domo
             => _dict[modelId].Item1;
 
         public bool Update(Guid modelId, Func<object, object> updateFunc)
-            => Update(modelId, (T x) => (T)updateFunc(x));
+            => Update(modelId, x => (T)updateFunc(x));
 
         public IModel Add(object state)
             => Add((T)state);
@@ -103,6 +117,10 @@ namespace Domo
         {
             _dict[id].Item2.Dispose();
             _dict.Remove(id);
+            RepositoryChanged?.Invoke(this,
+                new RepositoryChangeArgs
+                    { ChangeType = RepositoryChangeType.ModelRemoved, ModelId = id, Repository = this });
+            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove));
         }
 
         public bool ModelExists(Guid id)
@@ -122,7 +140,9 @@ namespace Domo
 
         public override bool IsSingleton => false;
 
-        public event NotifyCollectionChangedEventHandler CollectionChanged;
+        public int Count => GetModels().Count;
+
+        public IModel<T> this[int index] => GetModels()[index];
     }
 
     public class SingletonRepository<T> : Repository<T>, ISingletonRepository<T>
@@ -136,5 +156,11 @@ namespace Domo
         public override bool IsSingleton => true;
 
         public IModel<T> Model { get; }
+
+        public T Value
+        {
+            get => Model.Value;
+            set => Model.Value = value;
+        }
     } 
 }

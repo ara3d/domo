@@ -150,7 +150,7 @@ namespace Domo
         /// <summary>
         /// Returns the value stored in the repository. 
         /// </summary>
-        TValue GetValue(Guid modelId);
+        new TValue GetValue(Guid modelId);
 
         bool Update(Guid modelId, Func<TValue,TValue> updateFunc);
 
@@ -159,6 +159,8 @@ namespace Domo
         IModel<TValue> Add(TValue value);
 
         new IReadOnlyList<IModel<TValue>> GetModels();
+
+        void Clear();
     }
 
     /// <summary>
@@ -167,6 +169,9 @@ namespace Domo
     public interface IAggregateRepository<T> : 
         IRepository<T>, INotifyCollectionChanged
     {
+        int Count { get; }
+
+        IModel<T> this[int index] { get; }
     }
 
     /// <summary>
@@ -181,6 +186,8 @@ namespace Domo
         /// The domain model associated with the repository 
         /// </summary>
         IModel<T> Model { get; }
+
+        T Value { get; set; }
     }
 
     /// <summary>
