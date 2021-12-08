@@ -133,6 +133,11 @@ namespace Domo
         /// Called after a change to a repository 
         /// </summary>
         event EventHandler<RepositoryChangeArgs> RepositoryChanged;
+
+        /// <summary>
+        /// Removes all of the models from the repository. 
+        /// </summary>
+        void Clear();
     }
 
     /// <summary>
@@ -159,8 +164,6 @@ namespace Domo
         IModel<TValue> Add(TValue value);
 
         new IReadOnlyList<IModel<TValue>> GetModels();
-
-        void Clear();
     }
 
     /// <summary>
