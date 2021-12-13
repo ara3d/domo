@@ -16,18 +16,15 @@ using System.Windows.Shapes;
 namespace Domo.Sample.WpfApp
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Interaction logic for RepoControl.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class RepoControl : UserControl
     {
-        public MainWindow()
+        public Domo 
+
+        public RepoControl()
         {
             InitializeComponent();
-
-            // TODO: createa a set of repositories 
-
-            // TODO: for each repository create a tab. 
-
         }
     }
 }

@@ -5,7 +5,8 @@ using System.Text;
 
 namespace Domo
 {
-    public class DataStore : IDataStore
+    public class RepositoryManager 
+        : IRepositoryManager    
     {
         private readonly IList<IRepository> _repositories = new List<IRepository>();
 

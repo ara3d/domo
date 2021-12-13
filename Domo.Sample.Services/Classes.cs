@@ -1,5 +1,8 @@
 ﻿using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Drawing;
+using System.Security.Cryptography.X509Certificates;
+using System.Windows.Input;
 using Domo.SampleModels;
 
 namespace Domo.Sample.Services
@@ -9,7 +12,7 @@ namespace Domo.Sample.Services
 
     public class ApplicationEventService : AggregateModelBackedService<ApplicationEvent>
     {
-        public ApplicationEventService(IDataStore store, ILogService logService) : base(store)
+        public ApplicationEventService(IRepositoryManager store, ILogService logService) : base(store)
         {
             Repository.OnModelChanged(status => logService.Log("Application Event", status.Value.EventName));
         }
@@ -36,7 +39,7 @@ namespace Domo.Sample.Services
 
     public class LogService : AggregateModelBackedService<LogItem>, ILogService
     {
-        public LogService(IDataStore store)
+        public LogService(IRepositoryManager store)
             : base(store)
         { }
 
@@ -50,8 +53,8 @@ namespace Domo.Sample.Services
 
     public class StatusService : SingletonModelBackedService<Status>, IStatusService
     {
-        public StatusService(IDataStore dataStore, ILogService logService)
-            : base(dataStore)
+        public StatusService(IRepositoryManager repositoryManager, ILogService logService)
+            : base(repositoryManager)
         {
             Repository.OnModelChanged(status => logService.Log("Status", status.Value.Message));
         }
@@ -71,8 +74,8 @@ namespace Domo.Sample.Services
 
     public class UserService : SingletonModelBackedService<User>, IUserService
     {
-        public UserService(IDataStore dataStore)
-            : base(dataStore)
+        public UserService(IRepositoryManager repositoryManager)
+            : base(repositoryManager)
         {
             RegisterCommand(LogIn, () => CanLogin, Repository);
             RegisterCommand(LogOut, () => CanLogout, Repository);
@@ -136,7 +139,7 @@ namespace Domo.Sample.Services
 
     public class UndoService : SingletonModelBackedService<UndoState>, IUndoService
     {
-        public UndoService(IDataStore store)
+        public UndoService(IRepositoryManager store)
             : base(store)
         {
             Store.RepositoryChanged += Store_RepositoryChanged;
@@ -179,7 +182,7 @@ namespace Domo.Sample.Services
 
     public class ChangeService : AggregateModelBackedService<ChangeRecord>, IChangeService
     {
-        public ChangeService(IDataStore store)
+        public ChangeService(IRepositoryManager store)
             : base(store)
         {
             store.RepositoryChanged += (_, args) =>
@@ -199,10 +202,6 @@ namespace Domo.Sample.Services
                     case RepositoryChangeType.ModelUpdated:
                         Repository.Add(new ChangeRecord(args.NewValue?.ToString() ?? "", args.ModelId, ChangeType.Changed, DateTimeOffset.Now));
                         break;
-                    case RepositoryChangeType.ModelInvalid:
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
                 }
             };
         }
@@ -210,4 +209,91 @@ namespace Domo.Sample.Services
 
     public class KeyboardService
     { }
+
+    public class ProfilingService
+    { }
+
+    public class DragAndDropService
+    { }
+
+    public class DownloadFile
+    { }
+
+    public class BackupService
+    { }
+
+    public class RecentFiles
+    { }
+
+    public readonly record struct Dialog
+    (
+        string Title,
+        string Query
+    );
+
+    public class QueryUserService
+    {
+        public bool YesNo(string title, string message, string helpUrl) => true;
+        public bool OkCanel(string title, string message, string helpUrl) => true;
+        public bool AcceptCanel(string title, string message, string helpUrl) => true;
+        public bool Ok(string title) => true;
+        public bool Cancel(string title) => true;
+        public DateTimeOffset ChooseTime() => throw new NotImplementedException();
+        public float ChooseValue(float min, float max) => throw new NotImplementedException();
+        public float ChooseDate() => throw new NotImplementedException();
+        public string ChooseString() => throw new NotImplementedException();
+        public string ChooseFile() => throw new NotImplementedException();
+        public string ChooseFolder() => throw new NotImplementedException();
+        public int ChooseValue(int min, int max) => throw new NotImplementedException();
+        public Color ChooseColor() => throw new NotImplementedException();
+        public string ChooseValue(string[] values) => throw new NotImplementedException();
+    }
+
+    public class MacroRecorder
+    {
+        public void StartRecording() { }
+        public void StopRecording() {} 
+        public void CancelRecording() { }
+    }
+
+    public class MetricsService
+    {
+
+    }
+
+    public class ScriptingService
+    {
+
+    }
+
+    public class LoggingService
+    {
+    }
+
+    public class LogFilePolicy
+    {
+
+    }
+
+    public class AlertPolicy
+    {
+
+    }
+
+    public class CommonCommands
+    {
+        public void OpenFile() { }
+        public void CloseFile() { }
+        public void SaveFile(string fileName) { }
+        public void ShowLogsLocation() { }
+        public void ShowExeLocation() { }
+        public void ShowTempLocation() { }
+        public void ShowCommandLine() { }
+        public ICommand[] FindCommands(string name) => throw new NotImplementedException();
+        public void TriggerCommand(string name, object parameter) { }
+        public void RetrieveVideoControllerData() { }
+        public void EditCommands() { }
+        public void CreateLogMessage(string msg) { }
+        public void UpdateStatus(string msg) { }
+    }
 }

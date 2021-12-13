@@ -68,40 +68,41 @@ namespace Domo.SampleModels
 
     public readonly record struct ClickAnimation(Point Position, DateTimeOffset Time);
 
+    public record Select(Guid ShapeId);
+
+
     #endregion
 
     #region Business Domain
 
-    public record DrawingShape;
+    public interface IShape {}
 
-    public record Line(Point Start, Point End) : DrawingShape;
+    public interface IDrawingCommand {}
 
-    public record Ellipse(Point Center, Size Size) : DrawingShape;
+    public interface IInteraction {}
 
-    public record Rectangle(Point Position, Size Size) : DrawingShape;
+    public readonly record struct Line(Point Start, Point End) : IDrawingCommand;
 
-    public record DrawingCommand;
+    public readonly record struct Ellipse(Point Center, Size Size) : IShape;
 
-    public record SetPen(Color Color, float Width) : DrawingCommand;
+    public readonly record struct Rectangle(Point Position, Size Size) : IShape;
 
-    public record SetBrush(Color Color) : DrawingCommand;
+    public readonly record struct SetPen(Color Color, float Width) : IDrawingCommand;
 
-    public record WriteText(Point Position, string Text) : DrawingCommand;
+    public readonly record struct SetBrush(Color Color) : IDrawingCommand;
 
-    public record Select(IModel<DrawingShape> Shape) : DrawingCommand;
+    public readonly record struct WriteText(Point Position, string Text) : IDrawingCommand;
 
-    public record Draw(DrawingShape Shape) : DrawingCommand;
+    public readonly record struct Draw(IShape Shape) : IDrawingCommand;
 
-    public record Clear() : DrawingCommand;
-
-    public record CanvasClick(Point Position) : DrawingCommand;
+    public readonly record struct Clear() : IDrawingCommand;
 
     #endregion
 
     public static class ModelRegistration
     {
 
-        public static IDataStore RegisterRepos(IDataStore store)
+        public static IRepositoryManager RegisterRepos(IRepositoryManager store)
         {
             store.AddAggregateRepository<LogItem>();
             store.AddAggregateRepository<Error>();
@@ -119,8 +120,8 @@ namespace Domo.SampleModels
             store.AddSingletonRepository<ViewSettings>();
             store.AddAggregateRepository<ClickAnimation>();
 
-            store.AddAggregateRepository<DrawingShape>();
-            store.AddAggregateRepository<DrawingCommand>();
+            //store.AddAggregateRepository<IShape>();
+            //store.AddAggregateRepository<IDrawingCommand>();
             store.AddSingletonRepository<CurrentFile>();
             store.AddSingletonRepository<LastInput>();
             store.AddAggregateRepository<UndoItem>();

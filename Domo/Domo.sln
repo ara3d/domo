@@ -7,11 +7,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Domo", "Domo.csproj", "{231
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Domo.Sample.WpfApp", "..\Domo.Sample.WpfApp\Domo.Sample.WpfApp.csproj", "{15D7FAFE-E2D4-4255-BC2D-0CEB43CE2699}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domo.Tests", "..\Domo.Tests\Domo.Tests.csproj", "{AFC261A5-74C0-468C-83B5-AC9F1A63BA95}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Domo.Tests", "..\Domo.Tests\Domo.Tests.csproj", "{AFC261A5-74C0-468C-83B5-AC9F1A63BA95}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domo.SampleModels", "..\Domo.SampleModels\Domo.SampleModels.csproj", "{CB878C9F-696E-4C76-930C-96E1B3BE2254}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Domo.SampleModels", "..\Domo.SampleModels\Domo.SampleModels.csproj", "{CB878C9F-696E-4C76-930C-96E1B3BE2254}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domo.Sample.Services", "..\Domo.Sample.Services\Domo.Sample.Services.csproj", "{2F6B1606-2565-415D-A4E4-0F43E1B54AF6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Domo.Sample.Services", "..\Domo.Sample.Services\Domo.Sample.Services.csproj", "{2F6B1606-2565-415D-A4E4-0F43E1B54AF6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domo.Utils.Wpf", "..\Domo.Utils.Wpf\Domo.Utils.Wpf.csproj", "{C6ED1A02-A73C-4303-843A-3183804E7553}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{2F6B1606-2565-415D-A4E4-0F43E1B54AF6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2F6B1606-2565-415D-A4E4-0F43E1B54AF6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2F6B1606-2565-415D-A4E4-0F43E1B54AF6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C6ED1A02-A73C-4303-843A-3183804E7553}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6ED1A02-A73C-4303-843A-3183804E7553}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6ED1A02-A73C-4303-843A-3183804E7553}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6ED1A02-A73C-4303-843A-3183804E7553}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

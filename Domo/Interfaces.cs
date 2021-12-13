@@ -12,7 +12,6 @@ namespace Domo
         ModelAdded,
         ModelRemoved,
         ModelUpdated,
-        ModelInvalid,
     }
 
     public class RepositoryChangeArgs : EventArgs
@@ -25,15 +24,15 @@ namespace Domo
     }
 
     /// <summary>
-    /// A data store is the owning collection of repositories.
+    /// Manages a collection of repositories.
     /// When disposed, all repositories are deleted (disposed).
     /// Provides hooks for responding to changes to repositories. 
     /// </summary>
-    public interface IDataStore
+    public interface IRepositoryManager
         : IDisposable
     {
         /// <summary>
-        /// Adds a repository to the store. The DataStore is now
+        /// Adds a repository to the store. The RepositoryManager is now
         /// responsible for disposing the repository
         /// </summary>
         IRepository AddRepository(IRepository repository);
@@ -74,17 +73,6 @@ namespace Domo
         : IDisposable
     {
         /// <summary>
-        /// Should be consistent across processes and versions.
-        /// Two repositories with the same Guid but different versions could be registered with a data store. 
-        /// </summary>
-        Guid RepositoryId { get; }
-
-        /// <summary>
-        /// The version of the repository. Should be changed when the layout of the state type changes. 
-        /// </summary>
-        Version Version { get; }
-
-        /// <summary>
         /// The type of the model objects stored in in this particular repository 
         /// </summary>
         Type ValueType { get; }
@@ -112,7 +100,7 @@ namespace Domo
         /// <summary>
         /// Creates a new domain model given the existing state and adds it to the repository.
         /// </summary>
-        IModel Add(object state);
+        IModel Add(Guid id, object state);
 
         /// <summary>
         /// Deletes the specified domain model.  
@@ -157,12 +145,35 @@ namespace Domo
         /// </summary>
         new TValue GetValue(Guid modelId);
 
+        /// <summary>
+        /// Updates the value for the given model ID
+        /// </summary>
         bool Update(Guid modelId, Func<TValue,TValue> updateFunc);
 
+        /// <summary>
+        /// Creates a valid version of the value.
+        /// </summary>
+        TValue ForceValid(TValue value);
+
+        /// <summary>
+        /// Returns true if the value is valid or not. 
+        /// </summary>
         bool Validate(TValue value);
 
-        IModel<TValue> Add(TValue value);
+        /// <summary>
+        /// Creates a new valid value.
+        /// </summary>
+        TValue Create();
 
+        /// <summary>
+        /// Adds a new value to the repository and returns the model.
+        /// The value is forced to valid.
+        /// </summary>
+        IModel<TValue> Add(Guid id, TValue value = default);
+
+        /// <summary>
+        /// Returns a list of models 
+        /// </summary>
         new IReadOnlyList<IModel<TValue>> GetModels();
     }
 

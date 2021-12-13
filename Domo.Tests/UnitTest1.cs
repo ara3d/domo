@@ -1,14 +1,19 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
+using System.Text;
 using NUnit.Framework;
 using System.Text.Json;
+using NUnit.Framework.Constraints;
 
 namespace Domo.Tests
 {
     public readonly record struct TestRecord(int X, int Y);
 
-    public class Tests
+    public static class Tests
     {
         [Test]
         public static void Test1()
@@ -25,17 +30,129 @@ namespace Domo.Tests
 
         public static void OutputRepo(IRepository r)
         {
-            Console.WriteLine($"{r.RepositoryId} {r.ValueType.Name} {r.GetType().Name}");
+            Console.WriteLine($"{r.GetTypeName()} {r.ValueType.Name}");
             var models = string.Join(", ", r.GetModels().Select(m => m.ToDebugString()));
             Console.WriteLine($"[{models}]");
+        }
+
+        public record ModelRecord
+        (
+            Guid Id,
+            string Type,
+            object Value
+        );
+
+        public static Utf8JsonWriter Write(this Utf8JsonWriter writer, IModel m)
+        {
+            JsonSerializer.Serialize(writer, new ModelRecord(m.Id, m.ValueType.FullName, m.Value));
+            return writer;
+        }
+
+        public static Utf8JsonWriter Write(this Utf8JsonWriter writer, IRepository r)
+        {
+            writer.WriteStartObject();
+            writer.WriteString("RepoType", r.GetTypeName());
+            writer.WriteString("ValueType", r.ValueType.Name);
+            writer.WritePropertyName("Models");
+            JsonSerializer.Serialize(writer, r.GetModelDictionary());
+            writer.WriteEndObject();
+            writer.Flush();
+            return writer;
+        }
+
+        public static string ToStringWithStream(this Action<Stream> action)
+        {
+            using var stream = new MemoryStream();
+            action(stream);
+            return System.Text.Encoding.UTF8.GetString(stream.ToArray());
+        }
+
+        public static string ToStringWithJsonWriter(this Action<Utf8JsonWriter> action, JsonWriterOptions options = default)
+            => ToStringWithStream(stream => action(new Utf8JsonWriter(stream, options)));
+
+        public static void Read(ref Utf8JsonReader reader, JsonTokenType type)
+        {
+            if (!reader.Read())
+                throw new Exception("Reading failed");
+            if (reader.TokenType != type)
+                throw new Exception($"Expected token type {type} but instead got {reader.TokenType}");
+        }
+
+        public static void Deserialize<T>(this Utf8JsonReader reader, IRepository<T> repo)
+        {
+            repo.Clear();
+            Read(ref reader, JsonTokenType.StartObject);
+
+            var repoType = "";
+            var valueType = "";
+            var models = new List<IModel>();
+
+            reader.Read();
+            while (reader.TokenType == JsonTokenType.PropertyName)
+            {
+                var name = reader.GetString();
+                if (name == "RepoType")
+                {
+                    reader.Read();
+                    repoType = reader.GetString();
+                }
+                else 
+                if (name == "ValueType")
+                {
+                    reader.Read();
+                    valueType = reader.GetString();
+                }
+                else if (name == "Models")
+                {
+                    reader.Read();
+                    var d = JsonSerializer.Deserialize<IDictionary<Guid, T>>(ref reader);
+                    foreach (var kv in d)
+                    {
+                        repo.Add(kv.Key, kv.Value);
+                    }
+                }
+
+                reader.Read();
+            }
+            Console.WriteLine($"RepoType = {repoType}, ValueType =  {valueType}");
+        }
+
+        public static string ToJson(this IRepository repo)
+            => ToStringWithJsonWriter(writer => writer.Write(repo), new() { Indented = true });
+        
+
+        [Test]
+        public static void SerializeRepo()
+        {
+            var mgr = new RepositoryManager();
+            var repo = CreateAggregateRepository(mgr);
+            var text = repo.ToJson();
+            Console.WriteLine(text);
+            //var repo2 = JsonSerializer.Deserialize<AggregateRepository<TestRecord>>(text);
+            var bytes = Encoding.UTF8.GetBytes(text);
+            var reader = new Utf8JsonReader(bytes);
+            var repo2 = new AggregateRepository<TestRecord>();
+            Deserialize(reader, repo2);
+            var text2 = repo2.ToJson();
+            Assert.AreEqual(text, text2);
+        }
+
+        public static IAggregateRepository<TestRecord> CreateAggregateRepository(RepositoryManager mgr)
+        {
+            var repo = mgr.AddAggregateRepository<TestRecord>();
+            repo.Add(new TestRecord(1, 2));
+            repo.Add(new TestRecord(1, 3));
+            repo.Add(new TestRecord(2, 4));
+            repo.Add(new TestRecord(2, 5));
+            return repo;
         }
 
         [Test]
         public static void TestSingletonRepo()
         {
             var rec = new TestRecord(1, 2);
-            var store = new DataStore();
-            var repo = store.AddSingletonRepository(rec);
+            var mgr = new RepositoryManager();
+            var repo = mgr.AddSingletonRepository(rec);
             var modelId = repo.Model.Id;
             OutputRepo(repo);
             repo.Model.Value = new TestRecord(1, 3);
@@ -59,7 +176,7 @@ namespace Domo.Tests
         [Test]
         public static void TestAggregateRepo()
         {
-            var store = new DataStore();
+            var store = new RepositoryManager();
             var repo = store.AddAggregateRepository<TestRecord>();
 
             Assert.AreEqual(0, repo.GetModels().Count);

@@ -1,21 +1,23 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Runtime.Serialization.Json;
 
 namespace Domo
 {
     public static class DomoExtensions
     {
-        public static IRepository<T> GetRepository<T>(this IDataStore store)
+        public static IRepository<T> GetRepository<T>(this IRepositoryManager store)
             => (IRepository<T>)store.GetRepository(typeof(T));
 
-        public static IAggregateRepository<T> GetAggregateRepository<T>(this IDataStore store)
+        public static IAggregateRepository<T> GetAggregateRepository<T>(this IRepositoryManager store)
             => (IAggregateRepository<T>)store.GetRepository(typeof(T));
 
-        public static ISingletonRepository<T> GetSingletonRepository<T>(this IDataStore store)
+        public static ISingletonRepository<T> GetSingletonRepository<T>(this IRepositoryManager store)
             => (ISingletonRepository<T>)store.GetRepository(typeof(T));
 
-        public static void DeleteAllRepositories(this IDataStore store)
+        public static void DeleteAllRepositories(this IRepositoryManager store)
         {
             foreach (var r in store.GetRepositories())
                 store.DeleteRepository(r);
@@ -41,21 +43,20 @@ namespace Domo
                 }
             };
 
-        public static IRepository<T> AddTypedRepository<T>(this IDataStore store, IRepository<T> repository)
+        public static IRepository<T> AddTypedRepository<T>(this IRepositoryManager store, IRepository<T> repository) where T: new()
             => (IRepository<T>)store.AddRepository(repository);
 
-        public static IRepository<T> CreateAggregateRepository<T>(Guid id, Version version = null, Func<T, bool> validator = null)
-            => new AggregateRepository<T>(id, version ?? new Version(), validator);
+        public static IRepository<T> CreateAggregateRepository<T>() where T: new()
+            => new AggregateRepository<T>();
 
-        public static IRepository<T> CreateSingletonRepository<T>(Guid id, Version version = null, T value = default, Func<T, bool> validator = null)
-            where T : new()
-            => new SingletonRepository<T>(id, version ?? new Version(), value == null ? new T() : value, validator);
+        public static IRepository<T> CreateSingletonRepository<T>(T value = default) where T : new()
+            => new SingletonRepository<T>(value);
 
-        public static ISingletonRepository<T> AddSingletonRepository<T>(this IDataStore store, T value = default) where T : new()
-            => (ISingletonRepository<T>)store.AddTypedRepository<T>(CreateSingletonRepository(Guid.NewGuid(), new Version(), value == null ? new T() : value, null));
+        public static ISingletonRepository<T> AddSingletonRepository<T>(this IRepositoryManager store, T value = default) where T : new()
+            => (ISingletonRepository<T>)store.AddTypedRepository<T>(CreateSingletonRepository(value));
 
-        public static IAggregateRepository<T> AddAggregateRepository<T>(this IDataStore store)
-            => (IAggregateRepository<T>)store.AddTypedRepository(CreateAggregateRepository<T>(Guid.NewGuid(), new Version(), null));
+        public static IAggregateRepository<T> AddAggregateRepository<T>(this IRepositoryManager store) where T: new()
+            => (IAggregateRepository<T>)store.AddTypedRepository(CreateAggregateRepository<T>());
 
         public static bool Update<T>(this IModel<T> model, Func<T, T> updateFunc)
             => model.Repository.Update(model.Id, updateFunc);
@@ -65,5 +66,14 @@ namespace Domo
 
         public static string ToDebugString(this IModel model)
             => model == null ? "null" : $"{model.Id} {model.Value}";
+
+        public static string GetTypeName(this object x)
+            => x?.GetType().Name;
+
+        public static IReadOnlyDictionary<Guid, object> GetModelDictionary(this IRepository r)
+            => r.GetModels().ToDictionary(m => m.Id, m => m.Value);
+
+        public static IModel<T> Add<T>(this IRepository<T> repo, T value)
+            => repo.Add(Guid.NewGuid(), value);
     }
-}
+}   

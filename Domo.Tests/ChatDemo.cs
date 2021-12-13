@@ -13,10 +13,10 @@ namespace Domo.Tests
     // problem (aka business) domain. 
     #region Models
 
-    public record PhoneNumber(
+    public record struct PhoneNumber(
         string Number);
 
-    public record Message(
+    public record struct Message(
         Guid ChatId,
         PhoneNumber Sender, 
         string Text, 
@@ -24,11 +24,11 @@ namespace Domo.Tests
         DateTimeOffset Sent, 
         DateTimeOffset Recieved);
 
-    public record Contact(
+    public record struct Contact(
         string DisplayName, 
         IReadOnlyList<PhoneNumber> Numbers);
 
-    public record Chat(
+    public record struct Chat(
         IReadOnlyList<PhoneNumber> Participants);
 
     #endregion
@@ -67,7 +67,7 @@ namespace Domo.Tests
             => repo.GetModels().FirstOrDefault(x => x.Value.Numbers.Contains(number));
 
         public static IModel<Contact> AddContact(this IRepository<Contact> repo)
-            => repo.Add(new("", Array.Empty<PhoneNumber>()));
+            => repo.Add(new Contact("", Array.Empty<PhoneNumber>()));
 
         public static IModel<Contact> AddContact(this IRepository<Contact> repo, string name,
             params string[] phoneNumbers)
@@ -85,14 +85,14 @@ namespace Domo.Tests
     public static class ChatExtensions
     {
         public static IModel<Chat> StartChat(this IRepository<Chat> repo, params PhoneNumber[] participants)
-            => repo.Add(new(participants));
+            => repo.Add(new Chat(participants));
 
         public static IModel<Chat> StartChat(this IRepository<Chat> repo, params IModel<Contact>[] participants)
             => repo.StartChat(participants.Select(p => p.FirstNumber()).ToArray());
 
         public static IModel<Message> CreateMessage(this IRepository<Message> repo, 
             PhoneNumber sender, string text)
-            => repo.Add(new(Guid.Empty, sender, text, DateTimeOffset.Now, DateTimeOffset.Now, DateTimeOffset.Now));
+            => repo.Add(new Message(Guid.Empty, sender, text, DateTimeOffset.Now, DateTimeOffset.Now, DateTimeOffset.Now));
 
         public static bool SendMessage(this IModel<Chat> chat, IModel<Message> message)
             => message.Update(x => x with { Sent = DateTimeOffset.Now, ChatId = chat.Id });
@@ -102,7 +102,7 @@ namespace Domo.Tests
 
     public class ChatDemo
     {
-        public IDataStore Store = new DataStore();
+        public IRepositoryManager Store = new RepositoryManager();
 
         public IAggregateRepository<Message> Messages { get; }
         public IAggregateRepository<Chat> Chats { get; }

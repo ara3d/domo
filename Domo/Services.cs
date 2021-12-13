@@ -26,10 +26,10 @@ namespace Domo
 
     public class Service : IService
     {
-        public Service(IDataStore store)
+        public Service(IRepositoryManager store)
             => Store = store;
 
-        public IDataStore Store { get; }
+        public IRepositoryManager Store { get; }
 
         public Dictionary<string, INamedCommand> Commands = new Dictionary<string, INamedCommand>();
 
@@ -49,7 +49,7 @@ namespace Domo
 
     public class SingletonModelBackedService<T> : Service, ISingletonModelBackedService<T>
     {
-        public SingletonModelBackedService(IDataStore store)
+        public SingletonModelBackedService(IRepositoryManager store)
             : base(store)
         {
             Repository = store.GetSingletonRepository<T>();
@@ -77,7 +77,7 @@ namespace Domo
 
     public class AggregateModelBackedService<T> : Service, IAggregateModelBackedService<T>
     {
-        public AggregateModelBackedService(IDataStore store)
+        public AggregateModelBackedService(IRepositoryManager store)
             : base(store)
         {
             Repository = store.GetAggregateRepository<T>();

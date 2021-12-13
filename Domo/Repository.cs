@@ -6,24 +6,14 @@ using System.Linq;
 namespace Domo
 {
     public abstract class Repository<T> : IRepository<T>
+        where T: new()
     {
         public event EventHandler<RepositoryChangeArgs> RepositoryChanged;
         public event NotifyCollectionChangedEventHandler CollectionChanged;
 
-        protected Repository(Guid id, Version version, Func<object, bool> validatorFunc = null)
-        {
-            RepositoryId = id;
-            Version = version;
-            _validatorFunc = validatorFunc;
-        }
-
-        public Guid RepositoryId { get; }
-        public Version Version { get; }
-
         public Type ValueType
             => typeof(T);
 
-        private Func<object, bool> _validatorFunc;
         private IDictionary<Guid, (T, Model<T>)> _dict = new Dictionary<Guid, (T, Model<T>)>();
 
         public void Dispose()
@@ -32,7 +22,6 @@ namespace Domo
             CollectionChanged = null;
             Clear();
             _dict = null;
-            _validatorFunc = null;
         }
 
         public void Clear()
@@ -51,50 +40,74 @@ namespace Domo
         object IRepository.GetValue(Guid modelId)
             => GetModel(modelId);
 
+        public void NotifyRepositoryChanged(RepositoryChangeType type, Guid modelId, object newValue, object oldValue)
+        {
+            var args = new RepositoryChangeArgs
+            {
+                ChangeType = type,
+                ModelId = modelId,
+                NewValue = newValue,
+                OldValue = oldValue,
+                Repository = this,
+            };
+            RepositoryChanged?.Invoke(this, args);
+            switch (type)
+            {
+                case RepositoryChangeType.ModelAdded:
+                    CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add));
+                    break;
+                case RepositoryChangeType.ModelRemoved:
+                    CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove));
+                    break;
+                case RepositoryChangeType.ModelUpdated:
+                    CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace));
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
+            }
+        }
+
         public bool Update(Guid modelId, Func<T, T> updateFunc)
         {
             var model = GetModel(modelId);
-            var oldVal = model.Value;
-            var newVal = updateFunc(oldVal);
-            if (oldVal.Equals(newVal))
+            var oldValue = model.Value;
+            var newValue = updateFunc(oldValue);
+            if (oldValue.Equals(newValue))
             {
                 // When there is no difference in the values there is no need to trigger a change
                 return false;
             }
-            var args = new RepositoryChangeArgs
+            if (!Validate(newValue))
             {
-                ChangeType = RepositoryChangeType.ModelUpdated,
-                ModelId = modelId,
-                NewValue = newVal,
-                OldValue = oldVal
-            };
-            if (!Validate(newVal))
-            {
-                args.ChangeType = RepositoryChangeType.ModelInvalid;
-                RepositoryChanged?.Invoke(this, args); 
+                // Value is invalid
                 return false;
             }
-            _dict[modelId] = (newVal, _dict[modelId].Item2);
+            _dict[modelId] = (newValue, _dict[modelId].Item2);
             model.TriggerChangeNotification();
-            RepositoryChanged?.Invoke(this, args);
-            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace));
+            NotifyRepositoryChanged(RepositoryChangeType.ModelUpdated, modelId, oldValue, newValue);
             return true;
         }
 
-        public bool Validate(T state)
-            => ((IRepository)this).Validate(state);
+        public virtual T Create()
+            => ForceValid(new T());
+
+        public virtual T ForceValid(T state)
+            => state == null ? Create() : state;
+
+        public virtual bool Validate(T state)
+            => state != null;
 
         public bool Validate(object state)
-            => _validatorFunc(state);
+            => Validate((T)state);
 
-        public IModel<T> Add(T state)
+        public IModel<T> Add(Guid id, T state = default)
         {
+            state = ForceValid(state);
             if (IsSingleton && _dict.Count != 0)
                 throw new Exception("Singleton repository cannot have more than one model");
-            var id = Guid.NewGuid();
             var model = new Model<T>(id, this);
             _dict.Add(id, (state, model));
-            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add));
+            NotifyRepositoryChanged(RepositoryChangeType.ModelAdded, id, model.Value, null);
             return model;
         }
 
@@ -110,17 +123,15 @@ namespace Domo
         public bool Update(Guid modelId, Func<object, object> updateFunc)
             => Update(modelId, x => (T)updateFunc(x));
 
-        public IModel Add(object state)
-            => Add((T)state);
+        public IModel Add(Guid id, object state)
+            => Add(id, (T)state);
 
         public virtual void Delete(Guid id)
         {
+            var oldValue = _dict[id].Item1;
             _dict[id].Item2.Dispose();
             _dict.Remove(id);
-            RepositoryChanged?.Invoke(this,
-                new RepositoryChangeArgs
-                    { ChangeType = RepositoryChangeType.ModelRemoved, ModelId = id, Repository = this });
-            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove));
+            NotifyRepositoryChanged(RepositoryChangeType.ModelRemoved, id, null, oldValue);
         }
 
         public bool ModelExists(Guid id)
@@ -133,11 +144,8 @@ namespace Domo
     }
 
     public class AggregateRepository<T> : Repository<T>, IAggregateRepository<T>
+        where T : new()
     {
-        public AggregateRepository(Guid id, Version version, Func<T, bool> validatorFunc = null) 
-            : base(id, version, x => validatorFunc?.Invoke((T)x) ?? true)
-        { }
-
         public override bool IsSingleton => false;
 
         public int Count => GetModels().Count;
@@ -146,13 +154,11 @@ namespace Domo
     }
 
     public class SingletonRepository<T> : Repository<T>, ISingletonRepository<T>
+        where T : new()
     {
-        public SingletonRepository(Guid id, Version version, T value, Func<T, bool> validatorFunc = null)
-            : base(id, version, x => validatorFunc?.Invoke((T)x) ?? true)
-        {
-            Model = Add(value);
-        }
-
+        public SingletonRepository(T value = default)
+            => Model = Add(Guid.NewGuid(), value == null ? new T() : value);
+        
         public override bool IsSingleton => true;
 
         public IModel<T> Model { get; }
