@@ -70,7 +70,7 @@ namespace Domo
     /// When disposed, all domain models are disposed.
     /// </summary>
     public interface IRepository 
-        : IDisposable
+        : IDisposable, INotifyCollectionChanged
     {
         /// <summary>
         /// The type of the model objects stored in in this particular repository 
@@ -126,6 +126,11 @@ namespace Domo
         /// Removes all of the models from the repository. 
         /// </summary>
         void Clear();
+
+        /// <summary>
+        /// Return the number of models
+        /// </summary>
+        int Count { get; }
     }
 
     /// <summary>
@@ -181,11 +186,8 @@ namespace Domo
     /// An aggregate repository manages a collection of domain models. 
     /// </summary>
     public interface IAggregateRepository<T> : 
-        IRepository<T>, INotifyCollectionChanged
+        IRepository<T>
     {
-        int Count { get; }
-
-        IModel<T> this[int index] { get; }
     }
 
     /// <summary>
@@ -201,6 +203,9 @@ namespace Domo
         /// </summary>
         IModel<T> Model { get; }
 
+        /// <summary>
+        /// The value associated with the model.
+        /// </summary>
         T Value { get; set; }
     }
 
@@ -248,6 +253,7 @@ namespace Domo
         /// with the parameter name set to string.Empty.
         /// </summary>
         void TriggerChangeNotification();
+
     }
 
     /// <summary>

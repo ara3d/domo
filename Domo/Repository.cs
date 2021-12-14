@@ -54,13 +54,13 @@ namespace Domo
             switch (type)
             {
                 case RepositoryChangeType.ModelAdded:
-                    CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add));
+                    CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, oldValue));
                     break;
                 case RepositoryChangeType.ModelRemoved:
-                    CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove));
+                    CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, oldValue));
                     break;
                 case RepositoryChangeType.ModelUpdated:
-                    CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace));
+                    CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newValue, oldValue));
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(type), type, null);
@@ -141,16 +141,15 @@ namespace Domo
             => GetModels();
 
         public abstract bool IsSingleton { get; }
+
+        public int Count 
+            => _dict.Count;
     }
 
     public class AggregateRepository<T> : Repository<T>, IAggregateRepository<T>
         where T : new()
     {
         public override bool IsSingleton => false;
-
-        public int Count => GetModels().Count;
-
-        public IModel<T> this[int index] => GetModels()[index];
     }
 
     public class SingletonRepository<T> : Repository<T>, ISingletonRepository<T>

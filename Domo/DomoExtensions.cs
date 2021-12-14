@@ -75,5 +75,8 @@ namespace Domo
 
         public static IModel<T> Add<T>(this IRepository<T> repo, T value)
             => repo.Add(Guid.NewGuid(), value);
+
+        public static dynamic ToDynamic(this IModel model)
+            => new DynamicModel(model);
     }
 }   
