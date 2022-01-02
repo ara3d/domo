@@ -8,11 +8,22 @@ namespace Domo
     public abstract class Repository<T> : IRepository<T>
         where T: new()
     {
+        protected Repository(T value)
+        {
+            DefaultValue = value == null ? new T() : value;
+        }
+
         public event EventHandler<RepositoryChangeArgs> RepositoryChanged;
         public event NotifyCollectionChangedEventHandler CollectionChanged;
 
         public Type ValueType
             => typeof(T);
+
+        public T DefaultValue
+        { get; }
+
+        object IRepository.DefaultValue 
+            => DefaultValue;
 
         private IDictionary<Guid, (T, Model<T>)> _dict = new Dictionary<Guid, (T, Model<T>)>();
 
@@ -149,6 +160,10 @@ namespace Domo
     public class AggregateRepository<T> : Repository<T>, IAggregateRepository<T>
         where T : new()
     {
+        public AggregateRepository(T value = default)
+            : base(value)
+        { }
+
         public override bool IsSingleton => false;
     }
 
@@ -156,7 +171,8 @@ namespace Domo
         where T : new()
     {
         public SingletonRepository(T value = default)
-            => Model = Add(Guid.NewGuid(), value == null ? new T() : value);
+            : base(value)
+            => Model = Add(Guid.NewGuid(), DefaultValue);
         
         public override bool IsSingleton => true;
 

@@ -18,10 +18,10 @@ namespace Domo.Sample.Services
         }
 
         public void ApplicationStart()
-            => Repository.Add(new("Application Started", DateTimeOffset.Now));
+            => Repository.Add(new ApplicationEvent("Application Started", DateTimeOffset.Now));
 
         public void ApplicationEnd()
-            => Repository.Add(new("Application Closed", DateTimeOffset.Now));
+            => Repository.Add(new ApplicationEvent("Application Closed", DateTimeOffset.Now));
     }
 
     public class FileService

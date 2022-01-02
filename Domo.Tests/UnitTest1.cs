@@ -1,17 +1,24 @@
+#nullable enable
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using NUnit.Framework;
 using System.Text.Json;
 using NUnit.Framework.Constraints;
+using NUnit.Framework.Internal;
 
 namespace Domo.Tests
 {
     public readonly record struct TestRecord(int X, int Y);
+
+
 
     public static class Tests
     {
@@ -199,6 +206,86 @@ namespace Domo.Tests
 
             Assert.AreEqual(modelId, repo.GetModel(modelId).Id);
             Assert.AreEqual(modelId2, repo.GetModel(modelId2).Id);
+        }
+
+        [Test]
+        public static void TestModel()
+        {
+            var rec1 = new TestRecord { X = 1, Y = 2 };
+            var repo = new SingletonRepository<TestRecord>(rec1);
+            var model = repo.Model;
+            model.PropertyChanged += OnPropertyChanged;
+            model.Repository.CollectionChanged += RepositoryOnCollectionChanged;
+            model.Repository.RepositoryChanged += Repository_RepositoryChanged;
+            dynamic dynModel = model;
+            Console.WriteLine($"Original Record {rec1.X} {rec1.Y}");
+            Console.WriteLine($"Model {model.Value.X} {model.Value.Y}");
+            Console.WriteLine($"Dynamic model {dynModel.X} {dynModel.Y}");
+            dynModel.X = 56;
+            dynModel.Y = 67;
+
+            Console.WriteLine($"Original Record {rec1.X} {rec1.Y}");
+            Console.WriteLine($"Model {model.Value.X} {model.Value.Y}");
+            Console.WriteLine($"Dynamic model {dynModel.X} {dynModel.Y}");
+            Assert.AreEqual(new TestRecord { X = 1, Y = 2 }, rec1);
+            Assert.AreEqual(new TestRecord { X = 56, Y = 67}, model.Value);
+            Assert.AreEqual(56, dynModel.X);
+            Assert.AreEqual(new TestRecord { X = 56, Y = 67 }, repo.Value);
+
+            model.Value = model.Value with { X = 8, Y = 9 };
+            Console.WriteLine($"Original Record {rec1.X} {rec1.Y}");
+            Console.WriteLine($"Model {model.Value.X} {model.Value.Y}");
+            Console.WriteLine($"Dynamic model {dynModel.X} {dynModel.Y}");
+            Assert.AreEqual(new TestRecord { X = 1, Y = 2 }, rec1);
+            Assert.AreEqual(new TestRecord { X = 8, Y = 9 }, model.Value);
+            Assert.AreEqual(8, dynModel.X);
+            Assert.AreEqual(new TestRecord { X = 8, Y = 9 }, repo.Value);
+
+            model.Update(r => r with { X = 10, Y = 11 });
+            Console.WriteLine($"Original Record {rec1.X} {rec1.Y}");
+            Console.WriteLine($"Model {model.Value.X} {model.Value.Y}");
+            Console.WriteLine($"Dynamic model {dynModel.X} {dynModel.Y}");
+            Assert.AreEqual(new TestRecord { X = 1, Y = 2 }, rec1);
+            Assert.AreEqual(new TestRecord { X = 10, Y = 11 }, model.Value);
+            Assert.AreEqual(10, dynModel.X);
+            Assert.AreEqual(new TestRecord { X = 10, Y = 11 }, repo.Value);
+
+
+            // Console.WriteLine($"Dynamic model {dynModel.X} {dynModel.Y}");
+        }
+
+        [Test]
+        public static void TestModelModified()
+        {
+            var rec1 = new TestRecord { X = 1, Y = 2 };
+            var repo = new SingletonRepository<TestRecord>(rec1);
+            var model = repo.Model;
+            var propChangedCalled = false;
+            model.PropertyChanged += (sender, args) =>
+            {
+                propChangedCalled = true;
+            };
+            Assert.AreEqual(1, model.Value.X);
+            Assert.AreEqual(false, propChangedCalled);
+            model.Value = model.Value with { X = 3 };
+            Assert.AreEqual(3, model.Value.X);
+            Assert.AreEqual(true, propChangedCalled);
+            model.Dispose();
+        }
+
+        private static void Repository_RepositoryChanged(object? sender, RepositoryChangeArgs e)
+        {
+            Console.WriteLine($"Repository changed {sender}, {e.ChangeType} {e.ModelId} {e.NewValue} {e.OldValue}");
+        }
+
+        private static void RepositoryOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            Console.WriteLine($"Repository collection changed {sender}, {e?.Action}");
+        }
+
+        private static void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            Console.WriteLine($"Property changed {sender}, {e?.PropertyName}");
         }
     }
 }

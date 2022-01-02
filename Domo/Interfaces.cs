@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Dynamic;
 
 namespace Domo
 {
@@ -131,6 +132,11 @@ namespace Domo
         /// Return the number of models
         /// </summary>
         int Count { get; }
+
+        /// <summary>
+        /// Returns a default value
+        /// </summary>
+        object DefaultValue { get; }
     }
 
     /// <summary>
@@ -180,6 +186,11 @@ namespace Domo
         /// Returns a list of models 
         /// </summary>
         new IReadOnlyList<IModel<TValue>> GetModels();
+
+        /// <summary>
+        /// Returns the default value to construct for values
+        /// </summary>
+        new TValue DefaultValue { get; }
     }
 
     /// <summary>
@@ -210,9 +221,11 @@ namespace Domo
     }
 
     /// <summary>
-    /// A Domain Model is a wrapper around a single state value assumed to be immutable.
-    /// If the state value is replaced with a new one, it triggers a PropertyChanged
-    /// event, however the parameter name will all be String.Empty.
+    /// A Model is a reference to a state within a repository. The value is immutable,
+    /// but can be replaced with a new one, triggering a PropertyChanged
+    /// event. Model also implement ICustomTypeDescriptor which simplify data binding in Data Grids.
+    /// Models support IDynamicMetaObjectProvider, allowing them to be used in a dynamic context. 
+    /// The parameter name will always be String.Empty.
     /// This allows Views or View Models to respond to changes in a domain model. 
     /// Domain models can refer 
     /// (a guid) to identify the model across different states.
@@ -223,7 +236,7 @@ namespace Domo
     /// When Disposed all events handlers are removed. 
     /// </summary>
     public interface IModel :
-        INotifyPropertyChanged, IDisposable
+        INotifyPropertyChanged, IDisposable, ICustomTypeDescriptor, IDynamicMetaObjectProvider
     {
         /// <summary>
         /// Represents this particular domain model. Is persistent, and does not change
@@ -252,8 +265,7 @@ namespace Domo
         /// This invokes the INotifyPropertyChanged.PropertyChanged event
         /// with the parameter name set to string.Empty.
         /// </summary>
-        void TriggerChangeNotification();
-
+        void TriggerChangeNotification();   
     }
 
     /// <summary>
@@ -262,7 +274,7 @@ namespace Domo
     /// Do not derive your classes from this class. 
     /// </summary>
     public interface IModel<TValue> 
-        : IModel 
+        : IModel
     {
         new TValue Value { get; set; }
         new IRepository<TValue> Repository { get; }

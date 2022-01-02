@@ -3,12 +3,12 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Domo.Sample.WpfApp"
         mc:Ignorable="d"
         Title="MainWindow" Height="413" Width="492">
-    <Grid>
+    <StackPanel>
+        <Button Click="ButtonBase_OnClick">Test</Button>
         <TabControl x:Name="TabControl">
             <TabItem><TabItem.Header>Fubar</TabItem.Header></TabItem>
         </TabControl>
-    </Grid>
+    </StackPanel>
 </Window>
