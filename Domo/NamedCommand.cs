@@ -16,20 +16,35 @@ namespace Domo
 
     public class NamedCommand : INamedCommand
     {
-        public NamedCommand(Delegate execute, Delegate canExecute, IRepository repository)
+        public NamedCommand(Delegate execute, Delegate canExecute = null, IRepository repository = null)
+            : this(execute.Method?.Name ?? "", execute, canExecute, repository)
+        { }
+
+        public NamedCommand(string name, Delegate execute, Delegate canExecute = null, IRepository repository = null)
         {
-            Name = execute.Method.Name;
+            Name = name;
             ExecuteDelegate = execute;
             CanExecuteDelegate = canExecute;
-            repository.RepositoryChanged +=
-                (_1, _2) => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+            if (repository != null)
+            {
+                repository.RepositoryChanged +=
+                    (_1, _2) => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         public bool CanExecute(object parameter = null)
-            => (bool?)CanExecuteDelegate.DynamicInvoke(parameter) != false;
+            => CanExecuteDelegate == null ? true : (bool?)CanExecuteDelegate.DynamicInvoke(parameter) != false;
 
         public void Execute(object parameter = null)
-            => ExecuteDelegate.DynamicInvoke(parameter);
+        {
+            var nParams = ExecuteDelegate.Method.GetParameters().Length;
+            if (nParams == 0)
+                ExecuteDelegate.DynamicInvoke();
+            else if (nParams == 1)
+                ExecuteDelegate.DynamicInvoke(parameter);
+            else
+                throw new Exception($"Invalid numer of arguments recieved 1, expected {nParams}");
+        }
 
         public Delegate CanExecuteDelegate { get; }
         public Delegate ExecuteDelegate { get; }

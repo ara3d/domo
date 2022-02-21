@@ -125,16 +125,6 @@ namespace Domo.Sample.WpfApp
             name ??= repo.ValueType.Name;
             var tab = new TabItem { Header = name };
             var collection = new ObservableCollection<dynamic>(repo.GetModels());
-
-            /*
-            var binding = new Binding("Items")
-            {
-                Source = collection,
-                NotifyOnSourceUpdated = true,
-                Mode = BindingMode.TwoWay,
-                NotifyOnTargetUpdated = true
-            };
-            */
             var grid = new DataGrid
             {
                 ItemsSource = collection
