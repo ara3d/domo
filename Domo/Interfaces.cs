@@ -246,7 +246,7 @@ namespace Domo
 
         /// <summary>
         /// The underlying value or entity of the model. The actual value
-        /// is stored in a repository usign the Guid as a key. 
+        /// is stored in a repository using the Guid as a key. 
         /// </summary>
         object Value { get; set; }
 

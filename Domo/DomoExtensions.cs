@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Domo
 {
@@ -21,24 +22,48 @@ namespace Domo
                 store.DeleteRepository(r);
         }
 
-        public static void OnModelChanged<T>(this IRepository<T> repository, Action<IModel<T>> action)
+        public static void OnModelAdded<T>(this IAggregateRepository<T> repository, Action<IModel<T>> action)
             => repository.RepositoryChanged += (sender, args) =>
             {
-                if (args.ChangeType == RepositoryChangeType.ModelUpdated || args.ChangeType == RepositoryChangeType.ModelAdded)
+                if (args.ChangeType == RepositoryChangeType.ModelAdded)
                 {
                     var model = (IModel<T>)args.Repository.GetModel(args.ModelId);
                     action.Invoke(model);
                 }
             };
 
+        public static void OnModelRemoved<T>(this IAggregateRepository<T> repository, Action<IModel<T>> action)
+            => repository.RepositoryChanged += (sender, args) =>
+            {
+                if (args.ChangeType == RepositoryChangeType.ModelRemoved)
+                {
+                    var model = (IModel<T>)args.Repository.GetModel(args.ModelId);
+                    action.Invoke(model);
+                }
+            };
+
+        public static void OnModelUpdated<T>(this IAggregateRepository<T> repository, Action<IModel<T>> action)
+            => repository.RepositoryChanged += (sender, args) =>
+            {
+                if (args.ChangeType == RepositoryChangeType.ModelUpdated)
+                {
+                    var model = (IModel<T>)args.Repository.GetModel(args.ModelId);
+                    action.Invoke(model);
+                }
+            };
+
+        public static void OnModelChanged<T>(this IRepository<T> repository, Action<IModel<T>> action)
+            => repository.RepositoryChanged += (sender, args) =>
+            {
+                var model = (IModel<T>)args.Repository.GetModel(args.ModelId);
+                action.Invoke(model);
+            };
+
         public static void OnModelsChanged<T>(this IRepository<T> repository, Action<IReadOnlyList<IModel<T>>> action)
             => repository.RepositoryChanged += (sender, args) =>
             {
-                if (args.ChangeType == RepositoryChangeType.ModelUpdated || args.ChangeType == RepositoryChangeType.ModelAdded || args.ChangeType == RepositoryChangeType.ModelRemoved)
-                {
-                    var models = (IReadOnlyList<IModel<T>>)args.Repository.GetModels();
-                    action.Invoke(models);
-                }
+                var models = (IReadOnlyList<IModel<T>>)args.Repository.GetModels();
+                action.Invoke(models);
             };
 
         public static IRepository<T> AddTypedRepository<T>(this IRepositoryManager store, IRepository<T> repository) where T: new()

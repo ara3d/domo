@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
@@ -8,7 +9,7 @@ namespace Domo
     public abstract class Repository<T> : IRepository<T>
         where T: new()
     {
-        protected Repository(T value)
+        protected Repository(T value)   
         {
             DefaultValue = value == null ? new T() : value;
         }
@@ -25,7 +26,7 @@ namespace Domo
         object IRepository.DefaultValue 
             => DefaultValue;
 
-        private IDictionary<Guid, (T, Model<T>)> _dict = new Dictionary<Guid, (T, Model<T>)>();
+        private IDictionary<Guid, (T, Model<T>)> _dict = new ConcurrentDictionary<Guid, (T, Model<T>)>();
 
         public void Dispose()
         {
@@ -140,6 +141,8 @@ namespace Domo
         public virtual void Delete(Guid id)
         {
             var oldValue = _dict[id].Item1;
+            if (IsSingleton)
+                throw new Exception("Cannot remove model from Singleton repository");
             _dict[id].Item2.Dispose();
             _dict.Remove(id);
             NotifyRepositoryChanged(RepositoryChangeType.ModelRemoved, id, null, oldValue);

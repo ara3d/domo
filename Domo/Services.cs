@@ -8,8 +8,9 @@ namespace Domo
 {
     public interface IService
     {
-        INamedCommand GetCommand(string name);
-        IReadOnlyList<INamedCommand> GetCommands();
+        //string Name { get; }
+        //Version Version { get; }
+        //IReadOnlyList<INamedCommand> GetCommands();
     }
 
     public interface ISingletonModelBackedService<T> : IService, INotifyPropertyChanged
