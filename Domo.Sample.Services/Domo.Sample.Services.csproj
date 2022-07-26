@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="Ptarmigan.Services.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Domo.SampleModels\Domo.SampleModels.csproj" />
   </ItemGroup>
 

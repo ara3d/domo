@@ -10,24 +10,18 @@ namespace Domo
 {
     public sealed class Model<TValue> : DynamicObject, IModel<TValue>
     {
-        public Model(Guid id, IRepository<TValue> repo)
-        {
-            (Id, Repository) = (id, repo);
-        }
+        public Model(Guid id, IRepository<TValue> repo) 
+            => (Id, Repository) = (id, repo);
 
         static Model()
-        {
-            _cloneMethod = typeof(TValue).GetMethod("MemberwiseClone", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
-        }
-
+            => _cloneMethod = typeof(TValue).GetMethod("MemberwiseClone", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+        
         private static readonly MethodInfo _cloneMethod;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
         public void Dispose()
-        {
-            PropertyChanged = null;
-        }
+            => PropertyChanged = null;
 
         public Guid Id { get; }
 
@@ -57,15 +51,7 @@ namespace Domo
 
 
         public object GetPropertyValue(string name)
-        {
-            var prop = ValueType.GetProperty(name);
-            if (prop == null)
-            {
-                throw new ArgumentException(name);
-            }
-
-            return prop.GetValue(Value);
-        }
+            => ValueType.GetProperty(name)?.GetValue(Value) ?? throw new ArgumentException(name);
 
         object IModel.Value
         {
@@ -159,25 +145,20 @@ namespace Domo
 
         public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
         {
-            if (binder.Name == "ToString" && args.Length == 0)
+            switch (binder.Name)
             {
-                result = Value.ToString();
-                return true;
+                case "ToString" when args.Length == 0:
+                    result = Value.ToString();
+                    return true;
+                case "Equals" when args.Length == 1:
+                    result = Value.Equals(args[0]);
+                    return true;
+                case "GetHashCode" when args.Length == 0:
+                    result = Value.GetHashCode();
+                    return true;
+                default:
+                    return base.TryInvokeMember(binder, args, out result);
             }
-
-            if (binder.Name == "Equals" && args.Length == 1)
-            {
-                result = Value.Equals(args[0]);
-                return true;
-            }
-
-            if (binder.Name == "GetHashCode" && args.Length == 0)
-            {
-                result = Value.GetHashCode();
-                return true;
-            }
-
-            return base.TryInvokeMember(binder, args, out result);
         }
         
         public class ModelPropertyDescriptor : PropertyDescriptor

@@ -231,24 +231,6 @@ namespace Domo.Sample.Services
         string Query
     );
 
-    public class QueryUserService
-    {
-        public bool YesNo(string title, string message, string helpUrl) => true;
-        public bool OkCanel(string title, string message, string helpUrl) => true;
-        public bool AcceptCanel(string title, string message, string helpUrl) => true;
-        public bool Ok(string title) => true;
-        public bool Cancel(string title) => true;
-        public DateTimeOffset ChooseTime() => throw new NotImplementedException();
-        public float ChooseValue(float min, float max) => throw new NotImplementedException();
-        public float ChooseDate() => throw new NotImplementedException();
-        public string ChooseString() => throw new NotImplementedException();
-        public string ChooseFile() => throw new NotImplementedException();
-        public string ChooseFolder() => throw new NotImplementedException();
-        public int ChooseValue(int min, int max) => throw new NotImplementedException();
-        public Color ChooseColor() => throw new NotImplementedException();
-        public string ChooseValue(string[] values) => throw new NotImplementedException();
-    }
-
     public class MacroRecorder
     {
         public void StartRecording() { }

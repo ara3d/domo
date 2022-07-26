@@ -8,8 +8,6 @@ namespace Domo
 {
     public enum RepositoryChangeType
     {
-        RepositoryAdded,
-        RepositoryDeleted,
         ModelAdded,
         ModelRemoved,
         ModelUpdated,
@@ -22,42 +20,6 @@ namespace Domo
         public object OldValue { get; set; }
         public object NewValue { get; set; }
         public RepositoryChangeType ChangeType { get; set; }
-    }
-
-    /// <summary>
-    /// Manages a collection of repositories.
-    /// When disposed, all repositories are deleted (disposed).
-    /// Provides hooks for responding to changes to repositories. 
-    /// </summary>
-    public interface IRepositoryManager
-        : IDisposable
-    {
-        /// <summary>
-        /// Adds a repository to the store. The RepositoryManager is now
-        /// responsible for disposing the repository
-        /// </summary>
-        IRepository AddRepository(IRepository repository);
-
-        /// <summary>
-        /// Geta a shallow copy of all of the repositories managed
-        /// by the store at the current moment. 
-        /// </summary>
-        IReadOnlyList<IRepository> GetRepositories();
-
-        /// <summary>
-        /// Removes the specified repository from the store, and disposes it. 
-        /// </summary>
-        void DeleteRepository(IRepository repository);
-
-        /// <summary>
-        /// Retrieves a repository based on the type.  
-        /// </summary>
-        IRepository GetRepository(Type type);
-
-        /// <summary>
-        /// Called after a change to a repository 
-        /// </summary>
-        event EventHandler<RepositoryChangeArgs> RepositoryChanged;
     }
 
     /// <summary>
