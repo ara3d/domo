@@ -27,6 +27,7 @@ namespace Domo
                 action.Invoke((IModel<T>)args.Repository.GetModel(args.ModelId));
             };
 
+        /* TEMP:
         public static void OnModelChanged<T>(this IRepository<T> repository, Action<IModel<T>> action)
             => repository.RepositoryChanged += (sender, args) =>
             {
@@ -37,6 +38,7 @@ namespace Domo
         public static void OnModelsChanged<T>(this IRepository<T> repository, Action<IReadOnlyList<IModel<T>>> action)
             => repository.RepositoryChanged += (sender, args) =>
                 action.Invoke((IReadOnlyList<IModel<T>>)args.Repository.GetModels());
+        */
 
         public static bool Update<T>(this IModel<T> model, Func<T, T> updateFunc)
             => model.Repository.Update(model.Id, updateFunc);
@@ -55,5 +57,8 @@ namespace Domo
 
         public static IModel<T> Add<T>(this IRepository<T> repo, T value)
             => repo.Add(Guid.NewGuid(), value);
+
+        public static IModel GetSingleModel(this IRepository repo)
+            => repo.IsSingleton ? repo.GetModels()[0] : throw new Exception("Not a singleton repository");
     }
 }   

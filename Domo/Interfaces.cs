@@ -99,6 +99,12 @@ namespace Domo
         /// Returns a default value
         /// </summary>
         object DefaultValue { get; }
+
+        /// <summary>
+        /// True if this is designed to only hold one model at a time,
+        /// otherwise it is assumed to be an aggregate repository
+        /// </summary>
+        bool IsSingleton { get; }
     }
 
     /// <summary>

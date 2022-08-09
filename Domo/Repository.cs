@@ -67,7 +67,7 @@ namespace Domo
             {
                 case RepositoryChangeType.ModelAdded:
                     CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, oldValue));
-                    break;
+                    break;  
                 case RepositoryChangeType.ModelRemoved:
                     CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, oldValue));
                     break;

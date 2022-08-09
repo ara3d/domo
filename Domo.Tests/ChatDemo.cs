@@ -102,17 +102,15 @@ namespace Domo.Tests
 
     public class ChatDemo
     {
-        public IRepositoryManager Store = new RepositoryManager();
-
         public IAggregateRepository<Message> Messages { get; }
         public IAggregateRepository<Chat> Chats { get; }
         public IAggregateRepository<Contact> Contacts { get; }
 
         public ChatDemo()
         {
-            Messages = Store.AddAggregateRepository<Message>();
-            Chats = Store.AddAggregateRepository<Chat>();
-            Contacts = Store.AddAggregateRepository<Contact>();
+            Messages = new AggregateRepository<Message>();
+            Chats = new AggregateRepository<Chat>();
+            Contacts = new AggregateRepository<Contact>();
         }
 
         [Test]
