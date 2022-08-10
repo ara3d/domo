@@ -131,8 +131,7 @@ namespace Domo.Tests
         [Test]
         public static void SerializeRepo()
         {
-            var mgr = new RepositoryManager();
-            var repo = CreateAggregateRepository(mgr);
+            var repo = new AggregateRepository<TestRecord>();
             var text = repo.ToJson();
             Console.WriteLine(text);
             //var repo2 = JsonSerializer.Deserialize<AggregateRepository<TestRecord>>(text);
@@ -144,9 +143,9 @@ namespace Domo.Tests
             Assert.AreEqual(text, text2);
         }
 
-        public static IAggregateRepository<TestRecord> CreateAggregateRepository(RepositoryManager mgr)
+        public static IAggregateRepository<TestRecord> CreateAggregateRepository()
         {
-            var repo = mgr.AddAggregateRepository<TestRecord>();
+            var repo = new AggregateRepository<TestRecord>();
             repo.Add(new TestRecord(1, 2));
             repo.Add(new TestRecord(1, 3));
             repo.Add(new TestRecord(2, 4));
@@ -158,8 +157,7 @@ namespace Domo.Tests
         public static void TestSingletonRepo()
         {
             var rec = new TestRecord(1, 2);
-            var mgr = new RepositoryManager();
-            var repo = mgr.AddSingletonRepository(rec);
+            var repo = new SingletonRepository<TestRecord>(rec);
             var modelId = repo.Model.Id;
             OutputRepo(repo);
             repo.Model.Value = new TestRecord(1, 3);
@@ -183,8 +181,7 @@ namespace Domo.Tests
         [Test]
         public static void TestAggregateRepo()
         {
-            var store = new RepositoryManager();
-            var repo = store.AddAggregateRepository<TestRecord>();
+            var repo = new AggregateRepository<TestRecord>();
 
             Assert.AreEqual(0, repo.GetModels().Count);
             var rec1 = new TestRecord { X = 1, Y = 2 };
