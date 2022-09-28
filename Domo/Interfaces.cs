@@ -175,7 +175,7 @@ namespace Domo
     /// itself.
     /// </summary>
     public interface ISingletonRepository<T> 
-        : IRepository<T>
+        : IRepository<T>, INotifyPropertyChanged
     {
         /// <summary>
         /// The domain model associated with the repository 

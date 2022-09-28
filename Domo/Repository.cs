@@ -2,7 +2,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace Domo
 {
@@ -185,6 +187,12 @@ namespace Domo
         {
             get => Model.Value;
             set => Model.Value = value;
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged
+        {
+            add => Model.PropertyChanged += value;
+            remove => Model.PropertyChanged -= value;
         }
     } 
 }
