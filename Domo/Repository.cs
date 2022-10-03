@@ -3,8 +3,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
 
 namespace Domo
 {
@@ -86,7 +86,7 @@ namespace Domo
             var model = GetModel(modelId);
             var oldValue = model.Value;
             var newValue = updateFunc(oldValue);
-            if (oldValue.Equals(newValue))
+            if (ReferenceEquals(oldValue, newValue) || oldValue.Equals(newValue))
             {
                 // When there is no difference in the values there is no need to trigger a change
                 return false;
@@ -131,6 +131,9 @@ namespace Domo
         public IModel<T> GetModel(Guid modelId)
             => _dict[modelId].Item2;
 
+        public int GetNumModels()
+            => _dict.Count;
+
         public T GetValue(Guid modelId)
             => _dict[modelId].Item1;
 
@@ -170,6 +173,37 @@ namespace Domo
         { }
 
         public override bool IsSingleton => false;
+
+        public IEnumerable<T> Values
+        {
+            get => GetModels().Select(m => m.Value);
+            set => SetValues(value);
+        }
+
+        public void SetValues(IEnumerable<T> values)
+        {
+            var vs = values.ToArray();
+            var models = GetModels();
+            for (var i = 0; i < vs.Length; i++)
+            {
+                if (models.Count <= i)
+                {
+                    Add(Guid.NewGuid(), vs[i]);
+                }
+                else
+                {
+                    var m = models[i];
+                    m.Value = vs[i];
+                }
+            }
+
+            for (var i = vs.Length; i < models.Count; i++)
+            {
+                Delete(models[i].Id);
+            }
+
+            Debug.Assert(GetNumModels() == vs.Length);
+        }
     }
 
     public class SingletonRepository<T> : Repository<T>, ISingletonRepository<T>
