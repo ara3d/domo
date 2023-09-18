@@ -137,6 +137,11 @@ namespace Domo
         /// Returns a default value
         /// </summary>
         object DefaultValue { get; }
+
+        /// <summary>
+        /// Returns true if the 
+        /// </summary>
+        bool IsSingleton { get; }
     }
 
     /// <summary>

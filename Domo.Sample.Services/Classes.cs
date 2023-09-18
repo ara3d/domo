@@ -1,7 +1,4 @@
-﻿using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Drawing;
-using System.Security.Cryptography.X509Certificates;
+﻿using System.Drawing;
 using System.Windows.Input;
 using Domo.SampleModels;
 
@@ -77,6 +74,7 @@ namespace Domo.Sample.Services
         public UserService(IRepositoryManager repositoryManager)
             : base(repositoryManager)
         {
+           
             RegisterCommand(LogIn, () => CanLogin, Repository);
             RegisterCommand(LogOut, () => CanLogout, Repository);
         }

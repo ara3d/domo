@@ -2,6 +2,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Data;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Domo
@@ -158,6 +160,37 @@ namespace Domo
 
         public int Count 
             => _dict.Count;
+
+        public void SetModelValues(IReadOnlyList<T> values)
+        {
+            // TODO: allow more sophisticated value updating (e.g., using function)
+            // TODO: provide a proper bulk notification (only notify once) 
+            // TODO: if something fails, roll-back the whole transition (e.g., validate everything first)
+
+            var ids = _dict.Keys.ToList();
+            var n = Math.Min(values.Count, ids.Count);
+            var i = 0;
+            for (; i < n; ++i)
+            {
+                var i1 = i;
+                if (!Update(ids[i], _ => values[i1]))
+                    throw new Exception("Updating values failed");
+            }
+
+            while (i < values.Count)
+            {
+                Debug.Assert(i >= ids.Count);
+                Add(Guid.NewGuid(), values[i]);
+                i++;
+            }
+
+            while (i < ids.Count)
+            {
+                Debug.Assert(i >= values.Count);
+                Delete(ids[i]);
+                i++;
+            }
+        }
     }
 
     public class AggregateRepository<T> : Repository<T>, IAggregateRepository<T>
@@ -168,6 +201,12 @@ namespace Domo
         { }
 
         public override bool IsSingleton => false;
+
+        public IReadOnlyList<T> Values
+        {
+            get => GetModels().Select(m => m.Value).ToList();
+            set => SetModelValues(value);
+        }
     }
 
     public class SingletonRepository<T> : Repository<T>, ISingletonRepository<T>

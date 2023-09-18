@@ -6,11 +6,13 @@ using System.Linq;
 
 namespace Domo
 {
+    /// <summary>
+    /// A Service in Domo has the same life length as the application.
+    /// It is started when it is created, and terminates when the application does.
+    /// </summary>
     public interface IService
     {
-        //string Name { get; }
-        //Version Version { get; }
-        //IReadOnlyList<INamedCommand> GetCommands();
+        IReadOnlyList<INamedCommand> GetCommands();
     }
 
     public interface ISingletonModelBackedService<T> : IService, INotifyPropertyChanged
@@ -36,8 +38,12 @@ namespace Domo
 
         public INamedCommand RegisterCommand(Delegate execute, Delegate canExecute, IRepository repository)
         {
-            var r = new NamedCommand(execute, canExecute, repository);
+            var r = new NamedCommand(execute, canExecute);
             Commands.Add(r.Name, r);
+
+            if (repository != null)
+                repository.RepositoryChanged += (_1, _2) => r.NotifyCanExecuteChanged();
+
             return r;
         }
 

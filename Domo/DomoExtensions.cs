@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 
 namespace Domo
 {
@@ -98,5 +97,17 @@ namespace Domo
 
         public static IModel<T> Add<T>(this IRepository<T> repo, T value)
             => repo.Add(Guid.NewGuid(), value);
+
+        public static IEnumerable<T> GetValues<T>(this IRepository<T> repo)
+            => repo.GetModels().Select(m => m.Value);
+
+        public static IEnumerable<object> GetValues(this IRepository repo)
+            => repo.GetModels().Select(m => m.Value);
+
+        public static IModel GetSingleModel(this IRepository repo)
+            => repo.GetModels()[0];
+
+        public static IModel<T> GetSingleModel<T>(this IRepository<T> repo)
+            => repo.GetModels()[0];
     }
 }   

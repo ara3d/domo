@@ -8,9 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Domo.Sample.Services\Domo.Sample.Services.csproj" />
     <ProjectReference Include="..\Domo.SampleModels\Domo.SampleModels.csproj" />
-    <ProjectReference Include="..\Domo\Domo.csproj" />
   </ItemGroup>
 
 </Project>
