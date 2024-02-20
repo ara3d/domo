@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 
-namespace Domo.Tests
+namespace Ara3D.Domo.Tests
 {
     // These specifically are classes that represent value and entities in the 
     // problem (aka business) domain. 

@@ -9,7 +9,7 @@ using System.Text;
 using NUnit.Framework;
 using System.Text.Json;
 
-namespace Domo.Tests
+namespace Ara3D.Domo.Tests
 {
     public readonly record struct TestRecord(int X, int Y);
 
@@ -110,7 +110,9 @@ namespace Domo.Tests
                     var d = JsonSerializer.Deserialize<IDictionary<Guid, T>>(ref reader);
                     foreach (var kv in d)
                     {
-                        repo.Add(kv.Key, kv.Value);
+                        // TODO: Serialization is not properly implemented in Domo anymore. 
+                        throw new NotImplementedException();
+                        // repo.Add(kv.Key, kv.Value);
                     }
                 }
 

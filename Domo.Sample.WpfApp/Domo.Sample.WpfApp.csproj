@@ -7,8 +7,4 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Domo.SampleModels\Domo.SampleModels.csproj" />
-  </ItemGroup>
-
 </Project>

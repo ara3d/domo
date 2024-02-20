@@ -1,15 +1,17 @@
 ﻿using System.Drawing;
 using System.Windows.Input;
-using Domo.SampleModels;
+using Ara3D.Domo.SampleModels;
+using Ara3D.Services;
+using Ara3D.Utils;
 
-namespace Domo.Sample.Services
+namespace Ara3D.Domo.Sample.Services
 {
     public class CommandService
     { }
 
     public class ApplicationEventService : AggregateModelBackedService<ApplicationEvent>
     {
-        public ApplicationEventService(IRepositoryManager store, ILogService logService) : base(store)
+        public ApplicationEventService(IApi api, ILogService logService) : base(api)
         {
             Repository.OnModelChanged(status => logService.Log("Application Event", status.Value.EventName));
         }
@@ -36,8 +38,8 @@ namespace Domo.Sample.Services
 
     public class LogService : AggregateModelBackedService<LogItem>, ILogService
     {
-        public LogService(IRepositoryManager store)
-            : base(store)
+        public LogService(IApi api)
+            : base(api)
         { }
 
         public void Log(string category, string message)
@@ -50,8 +52,8 @@ namespace Domo.Sample.Services
 
     public class StatusService : SingletonModelBackedService<Status>, IStatusService
     {
-        public StatusService(IRepositoryManager repositoryManager, ILogService logService)
-            : base(repositoryManager)
+        public StatusService(IApi api, ILogService logService)
+            : base(api)
         {
             Repository.OnModelChanged(status => logService.Log("Status", status.Value.Message));
         }
@@ -69,12 +71,11 @@ namespace Domo.Sample.Services
         INamedCommand LogoutCommand { get; }
     }
 
-    public class UserService : SingletonModelBackedService<User>, IUserService
+    public class UserService : SingletonModelBackedService<User>, IUserService 
     {
-        public UserService(IRepositoryManager repositoryManager)
-            : base(repositoryManager)
+        public UserService(IApi api)
+            : base(api)
         {
-           
             RegisterCommand(LogIn, () => CanLogin, Repository);
             RegisterCommand(LogOut, () => CanLogout, Repository);
         }
@@ -135,17 +136,19 @@ namespace Domo.Sample.Services
         INamedCommand RedoCommand { get; }
     }
 
-    public class UndoService : SingletonModelBackedService<UndoState>, IUndoService
+    public class UndoService : SingletonModelBackedService<UndoState>, 
+        IUndoService, 
+        ISubscriber<RepositoryChangedEvent>
     {
-        public UndoService(IRepositoryManager store)
-            : base(store)
+        public UndoService(IApi api)
+            : base(api)
         {
-            Store.RepositoryChanged += Store_RepositoryChanged;
+            api.EventBus.Subscribe<RepositoryChangedEvent>(this);
             RegisterCommand(Undo, () => CanUndo, Repository);
             RegisterCommand(Redo, () => CanRedo, Repository);
         }
 
-        private void Store_RepositoryChanged(object? sender, RepositoryChangeArgs e)
+        public void OnEvent(RepositoryChangedEvent e)
         {
             // TODO: store the appropriate change. 
             if (CanRedo)
@@ -178,29 +181,35 @@ namespace Domo.Sample.Services
     {
     }
 
-    public class ChangeService : AggregateModelBackedService<ChangeRecord>, IChangeService
+    public class ChangeService : 
+        AggregateModelBackedService<ChangeRecord>, 
+        IChangeService, 
+        ISubscriber<RepositoryChangedEvent>
     {
-        public ChangeService(IRepositoryManager store)
-            : base(store)
+        public ChangeService(IApi api)
+            : base(api)
         {
-            store.RepositoryChanged += (_, args) =>
+            api.EventBus.Subscribe<RepositoryChangedEvent>(this);
+        }
+
+        public void OnEvent(RepositoryChangedEvent e)
+        {
+            var args = e.Args;
+            switch (args.ChangeType)
             {
-                switch (args.ChangeType)
-                {
-                    case RepositoryChangeType.RepositoryAdded:
-                        break;
-                    case RepositoryChangeType.RepositoryDeleted:
-                        break;
-                    case RepositoryChangeType.ModelAdded:
-                        Repository.Add(new ChangeRecord(args.NewValue?.ToString() ?? "", args.ModelId, ChangeType.Added, DateTimeOffset.Now));
-                        break;
-                    case RepositoryChangeType.ModelRemoved:
-                        Repository.Add(new ChangeRecord("", args.ModelId, ChangeType.Removed, DateTimeOffset.Now));
-                        break;
-                    case RepositoryChangeType.ModelUpdated:
-                        Repository.Add(new ChangeRecord(args.NewValue?.ToString() ?? "", args.ModelId, ChangeType.Changed, DateTimeOffset.Now));
-                        break;
-                }
+                case RepositoryChangeType.RepositoryAdded:
+                    break;
+                case RepositoryChangeType.RepositoryDeleted:
+                    break;
+                case RepositoryChangeType.ModelAdded:
+                    Repository.Add(new ChangeRecord(args.NewValue?.ToString() ?? "", args.ModelId, ChangeType.Added, DateTimeOffset.Now));
+                    break;
+                case RepositoryChangeType.ModelRemoved:
+                    Repository.Add(new ChangeRecord("", args.ModelId, ChangeType.Removed, DateTimeOffset.Now));
+                    break;
+                case RepositoryChangeType.ModelUpdated:
+                    Repository.Add(new ChangeRecord(args.NewValue?.ToString() ?? "", args.ModelId, ChangeType.Changed, DateTimeOffset.Now));
+                    break;
             };
         }
     }

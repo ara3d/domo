@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace Domo.Sample.WpfApp
+namespace Ara3D.Domo.Sample.WpfApp
 {
     /// <summary>
     /// Interaction logic for App.xaml

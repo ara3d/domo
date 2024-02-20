@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 
-namespace Domo.Tests
+namespace Ara3D.Domo.Tests
 {
 
     public interface IObservableList<T> : IList<T>, INotifyCollectionChanged { }

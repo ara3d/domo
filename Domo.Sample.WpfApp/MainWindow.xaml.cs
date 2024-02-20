@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace Domo.Sample.WpfApp
+namespace Ara3D.Domo.Sample.WpfApp
 {
     public record struct Point(
         double X,
