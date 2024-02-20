@@ -1,18 +1,38 @@
 #  Domo 
 
-> <i>The key to controlling complexity is a good domain model, a model that goes beyond a surface vision of a domain by introducing an underlying structure, which gives the software developers the leverage they need. A good domain model can be incredibly valuable, but it’s not something that’s easy to make.</i> <p> - Martin Fowler, 2003 in the preface to Domain-Driven Design: Tackling Complexity in the Heart of Software by Eric Evans
+Domo is a state management library for C#. 
 
- Domo (short for "Domain Modeling") is a .NET Standard 2.0 library that aids in building layered architecture applications inspired by good software engineering principles and best practices. Domo is inpsired by some of the lessons from Domain Driven Design, without being overly dogmatic.
+## Overview 
 
- Domo offers a solution for defining data models as simple immutable objects that are unaware of the infrastructure and application logic, while providing support for data binding, and offering advantages of a centralized data management system (like Redux).
+> <i>The key to controlling complexity is a good domain model, a model that goes 
+beyond a surface vision of a domain by introducing an underlying structure, which 
+gives the software developers the leverage they need. A good domain model can be
+incredibly valuable, but it’s not something that’s easy to make.</i> <p>- Martin Fowler, 
+2003 in the preface to Domain-Driven Design: Tackling Complexity in the Heart of 
+Software by Eric Evans
+
+Domo (short for "Domain Modeling") is a .NET Standard 2.0 library that aids in 
+building layered architecture applications inspired by good software engineering 
+principles and best practices. Domo is inpsired by some of the lessons from 
+Domain Driven Design, without being overly dogmatic.
+
+Domo offers a solution for defining data models as simple immutable objects 
+that are unaware of the infrastructure and application logic, while providing 
+support for data binding, and offering advantages of a centralized data management 
+system (like Redux).
  
-  Domo is an unopinionated cross-platform library with no dependencies and works well with other application frameworks and libraries (e.g., Entity Framework, Prism, MVVM Light, WPF Toolkit, etc.).
+Domo is an unopinionated cross-platform library with no dependencies and works 
+well with other application frameworks and libraries (e.g., Entity Framework, 
+Prism, MVVM Light, WPF Toolkit, etc.).
 
- For an example of what using Domo can look like see: [ChatDemo.cs](https://github.com/vimaec/domo/blob/main/Domo.Tests/ChatDemo.cs) in the test folder. 
+For an example of what using Domo can look like see: 
+[ChatDemo.cs](https://github.com/vimaec/domo/blob/main/Domo.Tests/ChatDemo.cs) in the test folder. 
 
 # How Domo Works 
 
-Domo allow you to define the domain model using regular C# classes, structs, or records. There is no requirement to decorate the model type with special attributes, inherit from base classes, or implement a particular interface. 
+Domo allow you to define the domain model using regular C# classes, structs, or records. 
+There is no requirement to decorate the model type with special attributes, inherit from 
+base classes, or implement a particular interface. 
  
 Domo wraps models types in an interface called `IModel<T>`. This interface 
 
@@ -31,11 +51,15 @@ public interface IModel<TValue>
 }
 ```
 
- Notice that the model can be parameterized with structs, classes, or records. In DDD parlance this would be the difference between a "value" or "entity". Either way it is strongly recommended to use immutable types. 
+ Notice that the model can be parameterized with structs, classes, or records. In DDD 
+ parlance this would be the difference between a "value" or "entity". Either way it is 
+ strongly recommended to use immutable types. 
  
  The property changed event handler is triggered when a new value is provided. 
 
-`IModel` instances are created, retrieved, updated, validated, and deleted by a repository class. This repository class ultimately is responsible for storing the model data is stored. 
+`IModel` instances are created, retrieved, updated, validated, and deleted by a 
+repository class. This repository class ultimately is responsible for storing the 
+model data is stored. 
 
 ```csharp
 public interface IRepository<T>
@@ -52,7 +76,8 @@ public interface IRepository<T>
 }
 ```
 
-There are two types of repositories, aggregate repositories which contain a collection of data models, and singleton repositories which manage precisely one data model.
+There are two types of repositories, aggregate repositories which contain a collection 
+of data models, and singleton repositories which manage precisely one data model.
 
 ```csharp
     public interface IAggregateRepository<T> 
@@ -105,17 +130,28 @@ Domo can be used to manage the entire state of your application in a single loca
 * Logging 
 * Playback 
 
-An example of centralized state management is [Redux](https://redux.js.org/) a popular JavaScript state management library.
+An example of centralized state management is [Redux](https://redux.js.org/) a popular 
+JavaScript state management library.
 
 # Domain Driven Design Principles
 
-Eric Evans wrote the following insightful guidance in a white-paper called [Domain-Driven Design Reference](https://www.domainlanguage.com/wp-content/uploads/2016/05/DDD_Reference_2015-03.pdf) which are just plain old good ideas, regardless of whether one chooses to follow all of the recommendations of DDD or not. 
+Eric Evans wrote the following insightful guidance in a white-paper called 
+[Domain-Driven Design Reference](https://www.domainlanguage.com/wp-content/uploads/2016/05/DDD_Reference_2015-03.pdf) 
+which are just plain old good ideas, regardless of whether one chooses to follow all of 
+the recommendations of DDD or not. 
 
-> Isolate the expression of the domain model and the business logic, and eliminate any dependency on infrastructure, user interface, or even application logic that is not business logic. 
+> Isolate the expression of the domain model and the business logic, and eliminate any 
+dependency on infrastructure, user interface, or even application logic that is not 
+business logic. 
 
-> Partition a complex program into layers. Develop a design within each layer that is cohesive and that depends only on the layers below. Follow standard architectural patterns to provide loose coupling to the layers above. 
+> Partition a complex program into layers. Develop a design within each layer that is 
+cohesive and that depends only on the layers below. Follow standard architectural patterns 
+to provide loose coupling to the layers above. 
 
-> The domain objects, free of the responsibility of displaying themselves, storing themselves, managing application tasks, and so forth, can be focused on expressing the domain model. This allows a model to evolve to be rich enough and clear enough to capture essential business knowledge and put it to work. 
+> The domain objects, free of the responsibility of displaying themselves, storing 
+themselves, managing application tasks, and so forth, can be focused on expressing the 
+domain model. This allows a model to evolve to be rich enough and clear enough to capture 
+essential business knowledge and put it to work. 
 
 # Further Reading
 
@@ -125,9 +161,6 @@ Eric Evans wrote the following insightful guidance in a white-paper called [Doma
 
 * [Data Points - Coding for Domain-Driven Design: Tips for Data-Focused Devs](https://docs.microsoft.com/en-us/archive/msdn-magazine/2013/august/data-points-coding-for-domain-driven-design-tips-for-data-focused-devs) - Julie Lerhman, MSDN Magazine, Volume 28 Number 8 August 2013
 
-# Acknowledgements 
-
-* The VIM development team
 
 
 
