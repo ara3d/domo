@@ -6,6 +6,9 @@ using System.Dynamic;
 
 namespace Ara3D.Domo
 {
+    /// <summary>
+    /// Represents the kind of change that happens when a change event is triggered 
+    /// </summary>
     public enum RepositoryChangeType
     {
         RepositoryAdded,
@@ -15,6 +18,9 @@ namespace Ara3D.Domo
         ModelUpdated,
     }
 
+    /// <summary>
+    /// Contains information provided when a change event is triggered. 
+    /// </summary>
     public class RepositoryChangeArgs : EventArgs
     {
         public IRepository Repository { get; set; }
@@ -281,7 +287,15 @@ namespace Ara3D.Domo
     public interface IModel<TValue> 
         : IModel
     {
+        /// <summary>
+        /// The current value associated with the model.
+        /// Setting the value, updates the repository. 
+        /// </summary>
         new TValue Value { get; set; }
+        
+        /// <summary>
+        /// The repository that houses this value. 
+        /// </summary>
         new IRepository<TValue> Repository { get; }
     }
 }
