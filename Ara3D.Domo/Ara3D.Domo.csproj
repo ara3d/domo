@@ -8,6 +8,15 @@
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <RepositoryUrl>https://github.com/ara3d/domo</RepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <ItemGroup>
