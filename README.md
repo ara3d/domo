@@ -1,5 +1,7 @@
 #  Domo 
 
+[![NuGet Version](https://img.shields.io/nuget/v/Ara3D.Domo)](https://www.nuget.org/packages/Ara3D.Domo)
+
 Domo is a state management library for C#. 
 
 ## Overview 
@@ -11,7 +13,7 @@ incredibly valuable, but it’s not something that’s easy to make.</i> <p>- Ma
 2003 in the preface to Domain-Driven Design: Tackling Complexity in the Heart of 
 Software by Eric Evans
 
-Domo (short for "Domain Modeling") is a .NET Standard 2.0 library that aids in 
+**Domo** (short for "Domain Modeling") is a .NET Standard 2.0 library that aids in 
 building layered architecture applications inspired by good software engineering 
 principles and best practices. Domo is inpsired by some of the lessons from 
 Domain Driven Design, without being overly dogmatic.
