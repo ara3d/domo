@@ -10,24 +10,18 @@ namespace Ara3D.Domo
     public sealed class Model<TValue> : DynamicObject, IModel<TValue>
     {
         public Model(Guid id, IRepository<TValue> repo)
-        {
-            (Id, Repository) = (id, repo);
-        }
+            => (Id, Repository) = (id, repo);
 
         static Model()
-        {
-            _cloneMethod = typeof(TValue).GetMethod("MemberwiseClone", 
+            => _cloneMethod = typeof(TValue).GetMethod("MemberwiseClone", 
                 BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
-        }
 
         private static readonly MethodInfo _cloneMethod;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
         public void Dispose()
-        {
-            PropertyChanged = null;
-        }
+            => PropertyChanged = null;
 
         public Guid Id { get; }
 
@@ -141,16 +135,7 @@ namespace Ara3D.Domo
             => GetProperties().OfType<PropertyDescriptor>().Select(pi => pi.Name);
 
         public override bool TryConvert(ConvertBinder binder, out object result)
-        {
-            if (binder.Type == ValueType)
-            {
-                result = Value;
-                return true;
-            }
-
-            result = null;
-            return false;
-        }
+            => (result = binder.Type == ValueType ? (object)Value : null) != null;
 
         public override bool TrySetMember(SetMemberBinder binder, object value)
         {
