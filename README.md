@@ -36,7 +36,7 @@ Domo allow you to define the domain model using regular C# classes, structs, or 
 There is no requirement to decorate the model type with special attributes, inherit from 
 base classes, or implement a particular interface. 
  
-Domo wraps models types in an interface called `IModel<T>`. This interface 
+Domo wraps models types in a class that implements the `IModel<T>` interface and:
 
 1. provides a GUID to facilitate maintaining references when persisting the model
 1. implements `INotifyPropertyChanged` to inform of changes to the value
