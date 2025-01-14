@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Dynamic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace Ara3D.Domo
@@ -211,6 +212,63 @@ namespace Ara3D.Domo
 
             public override Type PropertyType
                 => PropertyInfo.PropertyType;
+        }
+
+        private sealed class ModelDynamicMetaObject : DynamicMetaObject
+        {
+            public ModelDynamicMetaObject(Expression expression, Model<TValue> value)
+                : base(expression,
+                      BindingRestrictions.GetTypeRestriction(expression, value.GetType()),
+                      value)
+            {
+            }
+
+            private Model<TValue> ModelInstance => (Model<TValue>)Value;
+
+            // Route "get" operations into Model<TValue>.TryGetMember
+            public override DynamicMetaObject BindGetMember(GetMemberBinder binder)
+            {
+                var getMethod = typeof(Model<TValue>).GetMethod(nameof(GetPropertyValue));
+                var call = Expression.Call(
+                    Expression.Convert(Expression, LimitType),
+                    getMethod,
+                    Expression.Constant(binder.Name));
+
+                // If you want the same short-circuit logic as TryGetMember, you can add code
+                // to handle "no property" earlier, but the example below is enough for most cases
+
+                var restrictions = BindingRestrictions.GetTypeRestriction(Expression, LimitType);
+                return new DynamicMetaObject(call, restrictions);
+            }
+
+            // Route "set" operations into Model<TValue>.TrySetMember
+            public override DynamicMetaObject BindSetMember(SetMemberBinder binder, DynamicMetaObject value)
+            {
+                var setMethod = typeof(Model<TValue>).GetMethod(nameof(Model<TValue>.SetPropertyValue));
+                var call = Expression.Call(
+                    Expression.Convert(Expression, LimitType),
+                    setMethod,
+                    Expression.Constant(binder.Name),
+                    Expression.Convert(value.Expression, typeof(object)));
+
+                var restrictions = BindingRestrictions.GetTypeRestriction(Expression, LimitType);
+
+                // We'll make a block that calls 'SetPropertyValue(...)'
+                // then yields an object. 
+                // For example, we can just return the same 'value' we were assigned.
+                var block = Expression.Block(
+                    call,
+                    // since 'call' is void, we must produce an object expression next
+                    Expression.Convert(value.Expression, typeof(object))
+                );
+
+                return new DynamicMetaObject(block, restrictions);
+            }
+        }
+
+        public override DynamicMetaObject GetMetaObject(Expression parameter)
+        {
+            return new ModelDynamicMetaObject(parameter, this);
         }
     }
 }
