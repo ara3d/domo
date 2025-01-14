@@ -2,7 +2,8 @@
 
 [![NuGet Version](https://img.shields.io/nuget/v/Ara3D.Domo)](https://www.nuget.org/packages/Ara3D.Domo)
 
-Domo is a state management library for C#. 
+**Domo** is a lightweight state-management library for .NET that wraps immutable domain models, giving you automatic change notifications 
+(via `INotifyPropertyChanged`), centralized state, and effortless WPF bindings—without forcing you to rewrite your domain logic.
 
 ## Overview 
 
